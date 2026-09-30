@@ -90,7 +90,7 @@
     <string name="app_permissions">App permissions</string>
     <string name="app_settings">App settings</string>
     <string name="apply_and_reconnect">Apply and reconnect</string>
-    <string name="apply_reconnects_carplay_for_size_resolution_music_buffer">Apply reconnects CarPlay for size, resolution, music buffer and frame rate. Other changes apply to your next connection.</string>
+    <string name="apply_reconnects_carplay_for_size_resolution_music_buffer">Settings that require a new connection restart CarPlay when applied. Other changes apply to your next connection.</string>
     <string name="audio">Audio</string>
     <string name="audio_routing">Audio routing</string>
     <string name="auto">Auto</string>
@@ -411,4 +411,5 @@
     <string name="settings_gesture_fingers_label">Open settings · swipe-down fingers</string>
     <string name="settings_gesture_fingers_option">%1$d fingers</string>
     <string name="settings_gesture_fingers_hint">Pick a finger count your head unit does not already use.</string>
+    <string name="location_reporting_reconnects">Changing this setting reconnects an active CarPlay session.</string>
 </resources>

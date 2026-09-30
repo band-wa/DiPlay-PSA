@@ -88,7 +88,7 @@
     <string name="app_permissions">أذونات التطبيق</string>
     <string name="app_settings">إعدادات التطبيق</string>
     <string name="apply_and_reconnect">تطبيق وإعادة الاتصال</string>
-    <string name="apply_reconnects_carplay_for_size_resolution_music_buffer">يعيد التطبيق اتصال CarPlay للحجم والدقة وذاكرة الموسيقى ومعدل الإطارات. تُطبق التغييرات الأخرى في اتصالك التالي.</string>
+    <string name="apply_reconnects_carplay_for_size_resolution_music_buffer">تؤدي الإعدادات التي تتطلب اتصالًا جديدًا إلى إعادة اتصال CarPlay عند تطبيقها. تُطبق التغييرات الأخرى في اتصالك التالي.</string>
     <string name="audio">الصوت</string>
     <string name="audio_routing">توجيه الصوت</string>
     <string name="auto">تلقائي</string>
@@ -400,4 +400,5 @@
     <string name="settings_gesture_fingers_label">فتح الإعدادات · عدد أصابع السحب لأسفل</string>
     <string name="settings_gesture_fingers_option">%1$d أصابع</string>
     <string name="settings_gesture_fingers_hint">اختر عددًا من الأصابع لا يستخدمه جهاز السيارة.</string>
+    <string name="location_reporting_reconnects">يؤدي تغيير هذا الإعداد إلى إعادة اتصال جلسة CarPlay النشطة.</string>
 </resources>

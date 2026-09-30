@@ -88,7 +88,7 @@
     <string name="app_permissions">Разрешения приложения</string>
     <string name="app_settings">Настройки приложения</string>
     <string name="apply_and_reconnect">Применить и переподключиться</string>
-    <string name="apply_reconnects_carplay_for_size_resolution_music_buffer">Применение переподключает CarPlay для размера, разрешения, буфера музыки и частоты кадров. Остальные изменения применяются при следующем подключении.</string>
+    <string name="apply_reconnects_carplay_for_size_resolution_music_buffer">Настройки, требующие нового подключения, переподключают CarPlay при применении. Остальные изменения применяются при следующем подключении.</string>
     <string name="audio">Звук</string>
     <string name="audio_routing">Маршрутизация звука</string>
     <string name="auto">Авто</string>
@@ -400,4 +400,5 @@
     <string name="settings_gesture_fingers_label">Открыть настройки · количество пальцев</string>
     <string name="settings_gesture_fingers_option">%1$d пальцев</string>
     <string name="settings_gesture_fingers_hint">Выберите число пальцев, не занятое головным устройством.</string>
+    <string name="location_reporting_reconnects">Изменение этой настройки перезапускает активное подключение CarPlay.</string>
 </resources>
