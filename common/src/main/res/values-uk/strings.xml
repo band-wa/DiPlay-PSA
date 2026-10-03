@@ -137,7 +137,7 @@
     <string name="choose_iphone">Вибрати iPhone</string>
     <string name="choose_location">Вибрати місце</string>
     <string name="choose_save_location">Вибрати місце збереження</string>
-    <string name="choose_where_to_save_your_report">Виберіть, куди зберегти звіт.\u0020</string>
+    <string name="choose_where_to_save_your_report">Виберіть місце збереження звіту. Якщо засіб вибору файлів недоступний, DiPlay збереже його в застосунку.\u0020</string>
     <string name="choose_your_iphone">Виберіть свій iPhone</string>
     <string name="close">Закрити</string>
 
@@ -416,5 +416,9 @@
     <string name="settings_gesture_fingers">Відкрити налаштування · свайп %1$d пальцями (торкніться, щоб змінити)</string>
     <string name="settings_gesture_fingers_label">Відкрити налаштування · кількість пальців</string>
     <string name="settings_gesture_fingers_option">%1$d пальців</string>
+
     <string name="settings_gesture_fingers_hint">Виберіть кількість пальців, яку не використовує головний пристрій.</string>
+    <string name="diagnostic_report_saved_in_app">Звіт збережено приватно в DiPlay, оскільки загальнодоступне місце збереження недоступне. Поділіться ним або перегляньте його тут. Нічого не надсилається автоматично.</string>
+    <string name="view_diagnostic_report">Переглянути звіт</string>
+    <string name="diagnostic_report_copy_hint">Натисніть і утримуйте текст звіту, щоб виділити та скопіювати його. Це можна використати, якщо немає застосунку для надсилання.</string>
 </resources>
