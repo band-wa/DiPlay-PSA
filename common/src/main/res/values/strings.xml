@@ -419,4 +419,7 @@
     <string name="diagnostic_report_saved_in_app">Your report was saved privately in DiPlay because a public save location was unavailable. Share it or view it here. Nothing is sent automatically.</string>
     <string name="view_diagnostic_report">View report</string>
     <string name="diagnostic_report_copy_hint">Touch and hold the report text to select and copy it. You can use this if no sharing app is available.</string>
+    <string name="usb_auto_confirm_title">Auto-confirm USB permission</string>
+    <string name="usb_auto_confirm_subtitle">Automatically accept the Android USB permission prompt when an iPhone is connected via cable (requires Accessibility Service)</string>
+    <string name="usb_auto_confirm_desc">Automatically checks Always allow and confirms the Android USB accessory prompt for CarPlay</string>
 </resources>

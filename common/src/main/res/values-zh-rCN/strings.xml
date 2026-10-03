@@ -419,4 +419,7 @@
     <string name="diagnostic_report_saved_in_app">由于公共保存位置不可用，报告已私密保存到 DiPlay。您可以在此分享或查看报告。不会自动发送任何内容。</string>
     <string name="view_diagnostic_report">查看报告</string>
     <string name="diagnostic_report_copy_hint">长按报告文本即可选择并复制。如果没有可用的分享应用，可以使用此方式。</string>
+    <string name="usb_auto_confirm_title">自动确认 USB 权限</string>
+    <string name="usb_auto_confirm_subtitle">有线连接 iPhone 时自动确认系统 USB 权限弹窗（需要无障碍服务）</string>
+    <string name="usb_auto_confirm_desc">在出现 CarPlay USB 权限弹窗时自动勾选默认并点击确定</string>
 </resources>
