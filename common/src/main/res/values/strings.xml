@@ -405,5 +405,10 @@
     <string name="widget_hours_minutes">%1$d h %2$02d min</string>
 
     <string name="center_map_no_permission_screen">This head unit has no settings screen for this permission. Allow it over ADB.</string>
-
+    <string name="open_diplay_settings_hint">In CarPlay, swipe down with %1$d fingers to open DiPlay settings.</string>
+    <string name="carplay_controls">CarPlay controls</string>
+    <string name="settings_gesture_fingers">Open settings · swipe with %1$d fingers (tap to change)</string>
+    <string name="settings_gesture_fingers_label">Open settings · swipe-down fingers</string>
+    <string name="settings_gesture_fingers_option">%1$d fingers</string>
+    <string name="settings_gesture_fingers_hint">Pick a finger count your head unit does not already use.</string>
 </resources>

@@ -405,5 +405,10 @@
     <string name="widget_hours_minutes">%1$d 小时 %2$02d 分钟</string>
 
     <string name="center_map_no_permission_screen">此车机没有该权限的设置界面，请通过 ADB 允许。</string>
-
+    <string name="open_diplay_settings_hint">CarPlay 中用 %1$d 指下滑打开 DiPlay 设置。</string>
+    <string name="carplay_controls">CarPlay 操作</string>
+    <string name="settings_gesture_fingers">打开设置 · %1$d 指下滑（点按切换）</string>
+    <string name="settings_gesture_fingers_label">打开设置 · 下滑手指数</string>
+    <string name="settings_gesture_fingers_option">%1$d 指</string>
+    <string name="settings_gesture_fingers_hint">选择车机没有占用的手指数。</string>
 </resources>
