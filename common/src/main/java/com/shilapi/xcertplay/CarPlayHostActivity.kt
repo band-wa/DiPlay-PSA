@@ -691,6 +691,15 @@ class CarPlayHostActivity : ComponentActivity() {
         }
     }
 
+    override fun onMultiWindowModeChanged(isInMultiWindowMode: Boolean, newConfig: Configuration) {
+        super.onMultiWindowModeChanged(isInMultiWindowMode, newConfig)
+        applyFullscreenMode()
+        videoView?.post {
+            val view = videoView ?: return@post
+            scheduleDisplaySize(view.width, view.height)
+        }
+    }
+
     override fun onDestroy() {
         mainHandler.removeCallbacks(hideIdleCenterMap)
         CenterMapOverlay.hide()
@@ -3669,6 +3678,7 @@ class CarPlayHostActivity : ComponentActivity() {
     }
 
     private fun applyFullscreenMode() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && isInMultiWindowMode) return
         val hideTop = hideTopBar
         val hideBottom = hideBottomBar
         WindowCompat.setDecorFitsSystemWindows(window, !(hideTop && hideBottom))
