@@ -1,5 +1,6 @@
 package com.shilapi.xcertplay
 
+import android.app.AppOpsManager
 import android.app.usage.UsageEvents
 import android.app.usage.UsageStatsManager
 import android.content.Context
@@ -7,15 +8,15 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Handler
 import android.os.Looper
+import android.os.Process
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
 
 /**
- * Whether a home screen is in front (BYD's normal home, map home or MyCar, or whichever
- * launcher is the default home, such as a third-party car launcher), from the newest resumed
- * activity in the owner's Usage Access events. Overlays and panels are not activities, so they
- * leave the answer as it is.
+ * Whether a home screen is in front (the launcher Android uses as home, such as a stock or
+ * third-party car launcher, or a map home), from the newest resumed activity in the owner's
+ * Usage Access events. Overlays and panels are not activities, so they leave the answer as it is.
  */
 internal class HomeScreenMonitor(context: Context, private val onChange: (Boolean) -> Unit) {
     private val context = context.applicationContext
@@ -77,10 +78,11 @@ internal class HomeScreenMonitor(context: Context, private val onChange: (Boolea
         private const val OVERLAP_MILLIS = 2_000L
         private const val FIRST_LOOK_BACK_MILLIS = 10 * 60_000L
 
-        // BYD's home list (Launcher3 HomeHelper): MyCar, the normal home, and the map home.
-        val HOME_PACKAGES = setOf("com.android.launcher3", "com.byd.launchermap", "com.byd.naviauto", "com.byd.mycar")
+        // The stock launcher and any launcher Android currently uses as home.
+        val HOME_PACKAGES = setOf("com.android.launcher3")
 
-        fun hasAccess(context: Context): Boolean = DiLink51ClusterMonitor.hasAccess(context)
+        fun hasAccess(context: Context): Boolean = context.getSystemService(AppOpsManager::class.java)
+            .checkOpNoThrow(AppOpsManager.OPSTR_GET_USAGE_STATS, Process.myUid(), context.packageName) == AppOpsManager.MODE_ALLOWED
 
         /** The launcher Android uses as home now, unless that is the chooser or DiPlay itself. */
         fun defaultHome(context: Context): String? = runCatching {
