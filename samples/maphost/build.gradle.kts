@@ -1,4 +1,4 @@
-// Sample: how a launcher embeds DiPlay's live dashboard map. See docs/LAUNCHER_INTEGRATION.md.
+// Sample: how a launcher embeds DiPlay's live dashboard map (inactive in this fork).
 plugins {
     alias(libs.plugins.android.application)
 }

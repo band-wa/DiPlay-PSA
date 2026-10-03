@@ -59,7 +59,7 @@ Follow-up from car testing on 2 October: small pinches did not resize the card. 
 
 [PR #107](https://github.com/shihabal3amri/DiPlay/pull/107) adds a public map-embedding service and a minimal sample in `samples/maphost`. Compatible launchers can attach, resize, and detach a live map view on Android 11 and newer. Sharing is off by default; when enabled, any local app can request the map. Disabling it removes existing mirror surfaces, releases attached views, and sends the launcher a disabled error. Delayed callbacks from released views cannot restore map access. Re-enabling sharing requires a fresh attach.
 
-See [launcher integration](LAUNCHER_INTEGRATION.md) for the protocol, permissions, and sample setup.
+The launcher map-embedding feature was removed in a later release of this fork; see [BYD_REMOVAL_AUDIT.md](BYD_REMOVAL_AUDIT.md).
 
 ### DiPlay Home sample launcher
 

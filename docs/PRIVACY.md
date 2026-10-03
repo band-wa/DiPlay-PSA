@@ -8,6 +8,6 @@ Diagnostic export is initiated by you. Reports include app/device versions, disp
 
 Microphone access supports Siri and calls. Bluetooth/Nearby devices and Wi-Fi/Location permissions support discovery and transport. The optional local VPN permission supports the USB link; it does not provide a remote internet VPN.
 
-The verified DiLink 5.1 cluster profile optionally uses Android Usage Access to follow theme and mini-map-card visibility. This permission exposes app-activity history. DiPlay filters the results to four stock BYD cluster activities, processes them locally, and logs only inferred cluster theme/visibility changes. Unrelated activity events are not retained or uploaded. Automatic mode is opt-in; disabling it stops these queries. Usage Access can also be revoked as described in [BYD navigation](BYD_NAVIGATION.md#dilink-51-theme-profile).
+DiPlay declares the Android Usage Access permission for an optional launcher map card that would show only over a home screen. In this fork that feature is inactive: its settings screen and the dashboard map stream it relied on were removed (see [BYD_REMOVAL_AUDIT.md](BYD_REMOVAL_AUDIT.md)). App-activity history is not read or retained in normal operation, and no usage data is uploaded.
 
 The static website has no analytics script or account. GitHub Pages, GitHub and Telegram apply their own policies when you use those services.

@@ -66,7 +66,7 @@
             android:screenOrientation="fullSensor"
             android:theme="@style/Theme.Xcertplay" />
 
-        <!-- The live dashboard map for launchers that embed it (docs/LAUNCHER_INTEGRATION.md). -->
+        <!-- The live dashboard map for launchers that embed it (inactive in this fork; see docs/BYD_REMOVAL_AUDIT.md). -->
         <service
             android:name="com.shilapi.xcertplay.MapEmbedService"
             android:exported="true"

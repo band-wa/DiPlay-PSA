@@ -1,5 +1,7 @@
 # Release review — 27 September 2026
 
+> **Fork note:** The standalone HUD, cluster/SOME-IP navigation and instrument-map features reviewed below were removed from this fork in a later commit. This file is kept as a historical record; see [BYD_REMOVAL_AUDIT.md](BYD_REMOVAL_AUDIT.md).
+
 # 0.2.0 — BYD navigation and connection improvements
 
 - Standalone windshield HUD arrows, distance and street names on the verified DiLink5.1 firmware; no ADB, root or computer helper.
@@ -13,7 +15,7 @@
 
 ## Validation scope
 
-The user physically confirmed live standalone HUD guidance and street names in both apps. The latest DiPlay test also confirmed Car hotspot startup and substantially improved Wi-Fi Direct performance. Occasional audio cutouts remain; the user explicitly deferred them to another version and authorized pushing, merging and releasing these changes. The release packages now permit the verified standalone backend while retaining the exact firmware/stock-receiver guard. See [BYD navigation](BYD_NAVIGATION.md).
+The user physically confirmed live standalone HUD guidance and street names in both apps. The latest DiPlay test also confirmed Car hotspot startup and substantially improved Wi-Fi Direct performance. Occasional audio cutouts remain; the user explicitly deferred them to another version and authorized pushing, merging and releasing these changes. The release packages now permit the verified standalone backend while retaining the exact firmware/stock-receiver guard.
 
 Earlier local review blockers for the standalone HUD path are resolved by physical tests. No claim is made that every vehicle, map app, force-stop sequence or USB failure mode was physically tested. Release checks include unit tests, build/lint, package/signature inspection and public-source credential checks. Android signing secrets and accessory private assets remain outside the repository/source archives.
 

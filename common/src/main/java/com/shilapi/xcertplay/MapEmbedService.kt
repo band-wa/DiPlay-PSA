@@ -30,7 +30,7 @@ import com.shilapi.xcertplay.host.R
  * inside its own screen. The app binds with [ACTION], sends [MSG_ATTACH] with its SurfaceView's
  * host token and size, and gets back a SurfaceControlViewHost.SurfacePackage to put into that
  * SurfaceView; the map then lives in the launcher's layout. Each attached view gets its own decoder.
- * Off until the driver allows it in DiPlay. Android 11+. See docs/LAUNCHER_INTEGRATION.md.
+ * Off until the driver allows it in DiPlay. Android 11+. Inactive in this fork (see docs/BYD_REMOVAL_AUDIT.md).
  */
 class MapEmbedService : Service() {
     private val main = Handler(Looper.getMainLooper())

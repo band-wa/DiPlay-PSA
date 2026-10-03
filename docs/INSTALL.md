@@ -35,6 +35,3 @@ adb install -r DiPlay-0.2.10.apk
 
 Only use a trusted computer. A different signing certificate cannot update this build; do not uninstall until you have saved any reports you need.
 
-## BYD navigation
-
-See [BYD navigation displays](BYD_NAVIGATION.md) for the firmware scope, map metadata requirements, settings and cleanup behavior. No runtime ADB starter is required.
