@@ -9,7 +9,10 @@ import android.widget.TextView
 import androidx.activity.result.ActivityResultLauncher
 import androidx.core.app.ActivityOptionsCompat
 import com.shilapi.xcertplay.host.R
+import java.io.File
 import org.junit.Assert.*
+import org.junit.Assume
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Robolectric
@@ -23,6 +26,18 @@ import org.robolectric.util.ReflectionHelpers
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [28], qualifiers = "en")
 class DiagnosticExportUiTest {
+    /**
+     * `androidx.core` FileProvider matches a configured root with a hardcoded `/` separator, so an
+     * app-private directory can never match a Windows canonical path. The provider roots are
+     * meaningful on POSIX filesystems only.
+     */
+    @Before fun requirePosixFileProviderRoots() {
+        Assume.assumeTrue(
+            "FileProvider root matching requires '/' path separators",
+            File.separatorChar == '/',
+        )
+    }
+
     @Test fun missingPickerSavesAReportAndProvidesSelectableTextInsideDiPlay() {
         val controller = Robolectric.buildActivity(DiPlayActivity::class.java).setup()
         val activity = controller.get()

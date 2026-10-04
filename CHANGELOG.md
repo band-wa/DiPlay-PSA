@@ -1,3 +1,17 @@
+# DiPlay PSA fork — unreleased
+
+Fork of [DiPlay](https://github.com/shihabal3amri/DiPlay) aimed at Peugeot/Citroën PSA head units running Android 9. The CarPlay protocol, audio, video and touch paths stay upstream; the vendor-specific head-unit integrations do not.
+
+- Remove the BYD instrument-cluster, windscreen-HUD, launcher-map-card, vehicle-data and network-ADB integrations together with their settings, resources, tests and documentation. The default OEM label is now PSA; CarPlay audio, video, touch and wireless connection paths are unaffected ([BYD_REMOVAL_AUDIT.md](docs/BYD_REMOVAL_AUDIT.md)).
+- Fix connection settings saved while the projection screen was in the background: the screen is resumed with FLAG_ACTIVITY_REORDER_TO_FRONT, so a Wi-Fi Direct choice made on the settings screen was ignored until the app was recreated.
+- Offer local offline authentication only. The CH341-bridge, I2C and remote authentication sources are not offered here; the identity requirements for builds are unchanged (see [docs/BUILD.md](docs/BUILD.md)).
+- Enable R8 code and resource shrinking for the mobile release build.
+- Open the settings menu from inside a running session with the configured swipe gesture, including system bar visibility, and restore safe-area edits made in the menu when it is cancelled.
+- Support multi-window and split-screen layouts with compact cards, instant GPU matrix scaling, preserved video geometry, and an optional multi-window resolution adaptation toggle that stays off by default.
+- Export diagnostics without a head-unit file picker: reports are saved inside the app and can be viewed or copied there.
+- Add an Accessibility service that confirms DiPlay's own Android USB permission dialog, restricted to system USB dialogs for this app.
+- Merge upstream generic fixes: settings swipe finger count, location permission flow, media metadata de-duplication, Android 9 AudioTrack property lookup, settled display size, wireless diagnostics with one guarded Android 10 Wi-Fi Direct recovery, codec release and media failure diagnostics, theme observation with own-app process-exit metadata, own-package VPN scope (#168) and preferred Wi-Fi Direct channel selection (#175).
+
 # DiPlay 0.2.10 — 2026-10-03
 
 - Publish CarPlay song metadata, position and artwork to Android media sessions; bound artwork queues and reject stale work across sessions (#82).

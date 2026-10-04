@@ -104,8 +104,7 @@ import java.util.concurrent.atomic.AtomicBoolean
  */
 class CarPlayHostActivity : ComponentActivity() {
     private data class SettingsBaseline(
-        val safeAreaSize: DisplaySize?,
-        val safeAreaRect: SafeAreaRect?,
+        val safeAreaRects: MutableMap<DisplaySize, SafeAreaRect?>,
         val customIconBytes: ByteArray?,
     )
 
@@ -654,8 +653,6 @@ class CarPlayHostActivity : ComponentActivity() {
             val view = videoView ?: return@post
             if (view.width > 0 && view.height > 0) {
                 scheduleDisplaySize(view.width, view.height)
-            }
-        }
             }
         }
     }
@@ -1481,9 +1478,8 @@ class CarPlayHostActivity : ComponentActivity() {
             null
         }
         return SettingsBaseline(
-            safeAreaSize = safeAreaSize,
-            safeAreaRect = safeAreaSize?.let {
-                AirPlayPersistence.loadSafeAreaRect(this, it.width, it.height)
+            safeAreaRects = mutableMapOf<DisplaySize, SafeAreaRect?>().apply {
+                safeAreaSize?.let { put(it, AirPlayPersistence.loadSafeAreaRect(this@CarPlayHostActivity, it.width, it.height)) }
             },
             customIconBytes = customIconBytes,
         )
@@ -1492,8 +1488,8 @@ class CarPlayHostActivity : ComponentActivity() {
     private fun restoreSettingsBaseline() {
         val baseline = settingsBaseline ?: return
         loadPersistedSettings()
-        baseline.safeAreaSize?.let { size ->
-            baseline.safeAreaRect?.let { rect ->
+        baseline.safeAreaRects.forEach { (size, savedRect) ->
+            savedRect?.let { rect ->
                 AirPlayPersistence.saveSafeAreaRect(
                     this,
                     size.width,
@@ -2899,6 +2895,7 @@ class CarPlayHostActivity : ComponentActivity() {
     private fun saveSafeAreaEditor() {
         val size = safeAreaEditSize ?: currentActivitySize() ?: return
         val rect = safeAreaEditorView?.currentRectForSource() ?: return
+        rememberSafeAreaBeforeEdit(size)
         AirPlayPersistence.saveSafeAreaRect(this, size.width, size.height, rect)
         appendLog(
             "Safe area saved for ${size.width}x${size.height}: " +
@@ -2913,10 +2910,18 @@ class CarPlayHostActivity : ComponentActivity() {
             appendLog("Safe area reset is unavailable before display layout")
             return
         }
+        rememberSafeAreaBeforeEdit(size)
         AirPlayPersistence.clearSafeAreaRect(this, size.width, size.height)
         updateSafeAreaSummary()
         updateResolutionMenu()
         appendLog("Safe area reset to full screen for ${size.width}x${size.height}")
+    }
+
+    private fun rememberSafeAreaBeforeEdit(size: DisplaySize) {
+        val baseline = settingsBaseline ?: return
+        if (!baseline.safeAreaRects.containsKey(size)) {
+            baseline.safeAreaRects[size] = AirPlayPersistence.loadSafeAreaRect(this, size.width, size.height)
+        }
     }
 
     private fun refreshDisplaySizeAfterLayout() {
@@ -3128,7 +3133,8 @@ class CarPlayHostActivity : ComponentActivity() {
         val controllerGeneration = restartGeneration
         val config = createRuntimeConfig()
         val effectiveSize = if (isMultiWindowActive() && !AirPlayPersistence.loadAdaptPipResolution(this) &&
-            maximumDetectedWidthPixels > size.width && maximumDetectedHeightPixels > size.height) {
+            maximumDetectedWidthPixels >= size.width && maximumDetectedHeightPixels >= size.height &&
+            (maximumDetectedWidthPixels > size.width || maximumDetectedHeightPixels > size.height)) {
             DisplaySize(maximumDetectedWidthPixels, maximumDetectedHeightPixels)
         } else {
             size
@@ -3781,9 +3787,9 @@ class CarPlayHostActivity : ComponentActivity() {
     }
 
     private fun applyFullscreenMode() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && isInMultiWindowMode) return
-        val hideTop = hideTopBar
-        val hideBottom = hideBottomBar
+        val multiWindow = isMultiWindowActive()
+        val hideTop = hideTopBar && !multiWindow
+        val hideBottom = hideBottomBar && !multiWindow
         WindowCompat.setDecorFitsSystemWindows(window, !(hideTop && hideBottom))
         val controller = WindowInsetsControllerCompat(window, window.decorView)
         if (hideTop) {

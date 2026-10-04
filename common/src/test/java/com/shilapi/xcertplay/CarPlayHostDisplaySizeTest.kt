@@ -13,11 +13,13 @@ import com.shilapi.xcertplay.airplay.*
 import com.shilapi.xcertplay.host.R
 import com.shilapi.xcertplay.media.AndroidMediaSink
 import com.shilapi.xcertplay.media.CarPlayVideoLayout
+import com.shilapi.xcertplay.mfi.LocalMfiAuthenticationClient
 import com.shilapi.xcertplay.orchestration.CarPlayController
 import com.shilapi.xcertplay.orchestration.CarPlayRuntimeConfig
 import com.shilapi.xcertplay.orchestration.MfiTarget
 import com.shilapi.xcertplay.orchestration.WirelessHotspotMode
 import com.shilapi.xcertplay.transport.Iap2IdentificationConfig
+import java.io.File
 import java.time.Duration
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.atomic.AtomicBoolean
@@ -37,7 +39,7 @@ import org.robolectric.annotation.LooperMode
 import org.robolectric.shadows.ShadowLog
 
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [29])
+@Config(sdk = [29], shadows = [DiPlayBootstrapShadow::class])
 @LooperMode(LooperMode.Mode.PAUSED)
 class CarPlayHostDisplaySizeTest {
     private lateinit var activity: CarPlayHostActivity
@@ -46,6 +48,7 @@ class CarPlayHostDisplaySizeTest {
 
     @Before fun setUp() {
         activity = Robolectric.buildActivity(CarPlayHostActivity::class.java).get()
+        File(activity.noBackupFilesDir, LocalMfiAuthenticationClient.DIRECTORY).mkdirs()
         AirPlayPersistence.saveAdaptPipResolution(activity, false)
         // Exercise host startup without launching vendor-service workers or real transports.
         controllerConstruction = mockConstruction(CarPlayController::class.java)
@@ -59,8 +62,6 @@ class CarPlayHostDisplaySizeTest {
     @After fun tearDown() {
         (getField("shuttingDown") as AtomicBoolean).set(true)
         (getField("mainHandler") as Handler).removeCallbacksAndMessages(null)
-        AirPlayPersistence.overlaySettingsListener = null
-        com.shilapi.xcertplay.hud.BydNavigationOutputs.setTurnOverlayListener(null)
         (getField("controller") as? CarPlayController)?.let {
             CarPlayMediaKeys.detach(it)
             it.close()

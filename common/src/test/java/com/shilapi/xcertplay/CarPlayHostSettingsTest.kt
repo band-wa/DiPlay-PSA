@@ -12,8 +12,10 @@ import android.widget.SeekBar
 import android.widget.RadioButton
 import com.shilapi.xcertplay.airplay.*
 import com.shilapi.xcertplay.host.R
+import com.shilapi.xcertplay.mfi.LocalMfiAuthenticationClient
 import com.shilapi.xcertplay.orchestration.*
 import com.shilapi.xcertplay.transport.Iap2IdentificationConfig
+import java.io.File
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.atomic.AtomicBoolean
 import org.junit.After
@@ -33,7 +35,7 @@ import org.robolectric.annotation.LooperMode
 import org.robolectric.android.util.concurrent.PausedExecutorService
 
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [29])
+@Config(sdk = [29], shadows = [DiPlayBootstrapShadow::class])
 @LooperMode(LooperMode.Mode.PAUSED)
 class CarPlayHostSettingsTest {
     private lateinit var activity: CarPlayHostActivity
@@ -51,7 +53,8 @@ class CarPlayHostSettingsTest {
         setField("activeDisplaySize", size)
         CarPlayBackgroundSession::class.java.getDeclaredField("owner").apply { isAccessible = true }
             .set(CarPlayBackgroundSession, activity)
-        AirPlayPersistence.saveMfiTarget(activity, MfiTarget.USB_CH341)
+        AirPlayPersistence.saveMfiTarget(activity, MfiTarget.LOCAL)
+        provisionLocalIdentity()
         AirPlayPersistence.saveWirelessHotspotMode(activity, WirelessHotspotMode.WIFI_P2P)
         invoke("loadPersistedSettings")
         invoke("buildContentView")
@@ -199,39 +202,26 @@ class CarPlayHostSettingsTest {
         assertEquals(0, field("restartGeneration"))
     }
 
-    @Test fun authenticationChoicesOnlyExposeLocalAndCh341() {
+    @Test fun authenticationOnlyOffersLocalOffline() {
         invoke("openSettingsMenu")
         val options = views(menu()).filterIsInstance<RadioButton>().filter { it.tag is MfiTarget }.toList()
-        assertEquals(listOf(MfiTarget.LOCAL, MfiTarget.USB_CH341), options.map { it.tag })
+        assertEquals(listOf(MfiTarget.LOCAL), options.map { it.tag })
         options.first().performClick()
         invoke("cancelSettingsEdits")
-        assertEquals(MfiTarget.USB_CH341, AirPlayPersistence.loadMfiTarget(activity))
-        assertEquals(MfiTarget.USB_CH341, field("mfiTarget"))
+        assertEquals(MfiTarget.LOCAL, AirPlayPersistence.loadMfiTarget(activity))
+        assertEquals(MfiTarget.LOCAL, field("mfiTarget"))
     }
 
-    @Test fun selectingLocalWithoutIdentityKeepsTheMenuAndSavedUsbChoice() {
+    @Test fun savingLocalWithoutAProvisionedIdentityKeepsTheMenuAndShowsTheError() {
+        clearLocalIdentity()
         attachController()
         invoke("openSettingsMenu")
         views(menu()).filterIsInstance<RadioButton>().first { it.tag == MfiTarget.LOCAL }.performClick()
         invoke("saveSettingsAndReconnect")
         assertTrue(field("menuOpen") as Boolean)
-        assertEquals(MfiTarget.USB_CH341, AirPlayPersistence.loadMfiTarget(activity))
+        assertEquals(MfiTarget.LOCAL, AirPlayPersistence.loadMfiTarget(activity))
         assertEquals(View.VISIBLE, (field("mfiErrorView") as View).visibility)
         assertEquals(0, field("restartGeneration"))
-    }
-
-    @Test fun switchingToUsbPersistsAndPassesUsbToTheRuntime() {
-        AirPlayPersistence.saveMfiTarget(activity, MfiTarget.LOCAL)
-        attachController()
-        invoke("openSettingsMenu")
-        views(menu()).filterIsInstance<RadioButton>().first { it.tag == MfiTarget.USB_CH341 }.performClick()
-        invoke("saveSettingsAndReconnect")
-        assertFalse(field("menuOpen") as Boolean)
-        assertEquals(MfiTarget.USB_CH341, AirPlayPersistence.loadMfiTarget(activity))
-        val config = invoke("createRuntimeConfig") as CarPlayRuntimeConfig
-        assertEquals(MfiTarget.USB_CH341, config.mfiTarget)
-        assertEquals(listOf(com.shilapi.xcertplay.transport.UsbDeviceId(0x1a86, 0x5512)), config.ch341Devices)
-        assertEquals(1, field("restartGeneration"))
     }
 
     @Test fun localRuntimeDoesNotRequestCh341Devices() {
@@ -269,6 +259,62 @@ class CarPlayHostSettingsTest {
         assertEquals(true, method.invoke(activity, attached))
         assertEquals(false, method.invoke(activity, Intent(UsbManager.ACTION_USB_DEVICE_ATTACHED)))
         assertEquals(false, method.invoke(activity, Intent(UsbManager.ACTION_USB_DEVICE_DETACHED).putExtra(UsbManager.EXTRA_DEVICE, device)))
+    }
+
+    @Test fun cancelRestoresSafeAreaResetAfterTheWindowChangesSize() {
+        val original = SafeAreaRect(20, 20, 1800, 900)
+        AirPlayPersistence.saveSafeAreaRect(activity, 1920, 942, original)
+        invoke("openSettingsMenu")
+        resizeWindow(1920, 942)
+        invoke("resetSafeAreaForCurrentSize")
+        assertNull(AirPlayPersistence.loadSafeAreaRect(activity, 1920, 942))
+
+        invoke("cancelSettingsEdits")
+
+        assertEquals(original, AirPlayPersistence.loadSafeAreaRect(activity, 1920, 942))
+    }
+
+    @Test fun cancelRemovesNewSafeAreaSavedAtAnotherWindowSize() {
+        invoke("openSettingsMenu")
+        resizeWindow(1920, 942)
+        invoke("openSafeAreaEditor")
+        val editor = field("safeAreaEditorView") as SafeAreaEditorView
+        editor.setRect(SafeAreaRect(20, 20, 1800, 900), 1920, 942)
+        invoke("saveSafeAreaEditor")
+        assertNotNull(AirPlayPersistence.loadSafeAreaRect(activity, 1920, 942))
+
+        invoke("cancelSettingsEdits")
+
+        assertNull(AirPlayPersistence.loadSafeAreaRect(activity, 1920, 942))
+    }
+
+    @Test fun savingKeepsSafeAreaEditsMadeAfterAWindowResize() {
+        invoke("openSettingsMenu")
+        resizeWindow(1920, 942)
+        invoke("openSafeAreaEditor")
+        val edited = SafeAreaRect(20, 20, 1800, 900)
+        (field("safeAreaEditorView") as SafeAreaEditorView).setRect(edited, 1920, 942)
+        invoke("saveSafeAreaEditor")
+
+        invoke("saveSettingsAndReconnect")
+
+        assertFalse(field("menuOpen") as Boolean)
+        assertEquals(edited, AirPlayPersistence.loadSafeAreaRect(activity, 1920, 942))
+    }
+
+    private fun provisionLocalIdentity() {
+        File(activity.noBackupFilesDir, LocalMfiAuthenticationClient.DIRECTORY).mkdirs()
+    }
+
+    private fun clearLocalIdentity() {
+        File(activity.noBackupFilesDir, LocalMfiAuthenticationClient.DIRECTORY).deleteRecursively()
+    }
+
+    private fun resizeWindow(width: Int, height: Int) {
+        val sizeClass = Class.forName("com.shilapi.xcertplay.CarPlayHostActivity\$DisplaySize")
+        val size = sizeClass.getDeclaredConstructor(Int::class.javaPrimitiveType, Int::class.javaPrimitiveType)
+            .apply { isAccessible = true }.newInstance(width, height)
+        setField("activeDisplaySize", size)
     }
 
     private fun gesture(fingers: Int, x: Float = 400f, y: Float = 700f) {

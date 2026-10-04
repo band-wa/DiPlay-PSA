@@ -1,7 +1,6 @@
 package com.shilapi.xcertplay
 
 import android.content.Context
-import com.shilapi.xcertplay.airplay.AirPlayIdentity
 import com.shilapi.xcertplay.orchestration.CarPlayRuntimeConfig
 import com.shilapi.xcertplay.orchestration.WirelessHotspotMode
 import org.junit.Assert.assertEquals
@@ -12,8 +11,6 @@ import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
-import org.robolectric.annotation.Implements
-import org.robolectric.annotation.Implementation
 
 /**
  * The connection settings screen lives in [DiPlayActivity] and comes back to the projection screen
@@ -21,7 +18,7 @@ import org.robolectric.annotation.Implementation
  * Settings saved while it was in the background must reach the next handshake.
  */
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [29], manifest = Config.NONE, shadows = [HostConnectionSettingsRefreshTest.Bootstrap::class])
+@Config(sdk = [29], manifest = Config.NONE, shadows = [DiPlayBootstrapShadow::class])
 class HostConnectionSettingsRefreshTest {
     private val app get() = RuntimeEnvironment.getApplication()
 
@@ -53,13 +50,5 @@ class HostConnectionSettingsRefreshTest {
             .set(host, AirPlayPersistence.loadIdentity(host))
         return CarPlayHostActivity::class.java.getDeclaredMethod("createRuntimeConfig")
             .apply { isAccessible = true }.invoke(host) as CarPlayRuntimeConfig
-    }
-
-    /** The projection screen must start without the private MFi identity used by real cars. */
-    @Implements(DiPlayBootstrap::class, isInAndroidSdk = false)
-    internal class Bootstrap {
-        @Implementation fun ensure(context: Context) = Unit
-
-        @Implementation fun deviceId(identity: AirPlayIdentity): String = "02:00:00:00:00:01"
     }
 }

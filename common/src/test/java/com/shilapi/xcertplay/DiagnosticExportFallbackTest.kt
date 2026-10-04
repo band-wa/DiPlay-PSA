@@ -8,6 +8,7 @@ import android.database.Cursor
 import android.net.Uri
 import androidx.core.content.FileProvider
 import org.junit.Assert.*
+import org.junit.Assume
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -25,8 +26,21 @@ class DiagnosticExportFallbackTest {
     private val reports get() = File(context.filesDir, "diagnostic-reports")
 
     @Before fun cleanReports() {
+        requirePosixFileProviderRoots()
         reports.deleteRecursively()
         registerReportProvider()
+    }
+
+    /**
+     * `androidx.core` FileProvider matches a configured root with a hardcoded `/` separator, so an
+     * app-private directory can never match a Windows canonical path. The provider roots are
+     * meaningful on POSIX filesystems only.
+     */
+    private fun requirePosixFileProviderRoots() {
+        Assume.assumeTrue(
+            "FileProvider root matching requires '/' path separators",
+            File.separatorChar == '/',
+        )
     }
 
     @Test fun androidNineSavesUtf8WithoutAPickerOrStoragePermission() {
