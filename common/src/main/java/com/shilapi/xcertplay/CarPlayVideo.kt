@@ -20,7 +20,8 @@ import java.util.concurrent.atomic.AtomicLong
 /**
  * iOS 27 video in car (see [VideoInCar]). The iPhone hands the car a media URL (insertPlayQueueItem)
  * and drives it (setRate, seek, stop); the car plays it in [CarPlayVideoActivity], which opens as soon
- * as the iPhone starts the item (or sends requestUI "videoplayback:") and only while the car is in P.
+ * as the iPhone starts the item or sends requestUI "videoplayback:". This fork has no gear source, so
+ * playback is not gated on P (see [VideoInCar.allowed]).
  */
 internal object CarPlayVideo : CarPlayVideoListener {
     private const val TAG = "DiPlay-Video"
@@ -51,12 +52,6 @@ internal object CarPlayVideo : CarPlayVideoListener {
         appContext = context.applicationContext
         controller = next
         next.videoListener = this
-    }
-
-    override fun readParked(): Boolean? = null
-
-    override fun onVideoAllowedChanged(allowed: Boolean) {
-        if (!allowed) main.post { closePlayer("the car left P") }
     }
 
     override fun onVideoSessionEnded() {
@@ -230,18 +225,11 @@ internal object CarPlayVideo : CarPlayVideoListener {
         val context = appContext ?: return
         when {
             url == null -> Log.w(TAG, "video player requested without a playable item")
-            !VideoInCar.allowed -> Log.w(TAG, "video player requested while not parked")
             activity != null -> Unit
             else -> context.startActivity(
                 Intent(context, CarPlayVideoActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
             )
         }
-    }
-
-    private fun closePlayer(reason: String) {
-        val player = activity ?: return
-        Log.i(TAG, "closing the video player: $reason")
-        player.finish()
     }
 
     private fun stop() {

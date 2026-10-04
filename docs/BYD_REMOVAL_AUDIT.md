@@ -135,3 +135,31 @@ ADB 组:BydAdbAccess ──► BydBattery/BydClusterNaviMode;BydBattery/BydParke
 3. **A**(物理删除)— 删除后全量编译 + 测试清理
 4. **C 决策**(保留 widget vs 一并删除)— 迁移或删除
 5. 全量构建:`.\gradlew.bat :mobile:assembleDebug :automotive:assembleDebug`
+
+## 6. 第二清理阶段(fork 后续提交)
+
+首轮移除(`22b8d72`)后,又按功能分组完成以下清理。本节的删除项与首轮无关,但同属"去掉 BYD 专用能力"。
+
+### 6.1 组 2/3/6:已随首轮删净
+风挡 HUD(`BydHud*`/`BydStandalone*`/`BydFactoryTurnCode`)、通用导航状态解析(`glance/CarPlayGlance`、`BydHudRouteState`、`BydManeuverCodes`)、调试设施(`mobile/src/debug` 的 HUD demo 与 StarterBridge)。导航 widget 与其布局/XML 也一并删除。
+
+### 6.2 组 5 车辆数据回传:本次删除
+- `shared/.../adb/{AdbKeys,AdbPacket,LocalAdb}.kt` 及测试
+- `shared/.../transport/VehicleSpeedNmea.kt`(`$PASCD` 编码器 + `VehicleSpeedLocationProvider`)及测试
+- `shared/.../transport/Iap2VehicleStatus.kt`(EV 声明、0xA100/0xA101/0xA102)及测试
+- `shared/src/main/assets/byd-hud-icons/` 与 `shared/BYD_HUD_ICONS_NOTICE.md`;`docs/THIRD_PARTY_NOTICES.md` 相应条目
+- `Iap2IdentificationConfig` 去掉 `vehicleStatusEnabled`/`chargingConnectors`/`vehicleSpeedEnabled`;`Iap2WiredControlClient`/`Iap2WirelessControlClient` 去掉 `vehicleStatusProvider` 形参、`withVehicleStatusFrom` 调用与 0xA100/0xA102 分支;`CarPlayController` 去掉同名构造形参。
+- 结果:向 iPhone 不再声明电动车、电量、续航与轮速。CarPlay 其余能力不受影响。
+
+### 6.3 组 4 中控地图卡:保留卡片,只删第三方桌面嵌入
+- 删除 `common/.../MapEmbedService.kt`(+测试)、`common/.../HomeScreenMonitor.kt`、`AirPlayPersistence` 的 `launcher_map_sharing` 三个方法、`MapMirrors.launcherShowsMap`/`onChanged`/流活跃监听、`samples/home/`、`samples/maphost/` 及其 `settings.gradle.kts` include。
+- manifest 去掉 `PACKAGE_USAGE_STATS`、`MapEmbedService` 声明与 HOME `<queries>`。
+- 保留:`CenterMapOverlay.kt`(+测试)、`MapMirrors.CARD`/`STREAM_ASPECT`/`reapply()`、`CarPlayHostActivity.showCenterMap()` 接线、`AirPlayPersistence` 的 center-map 键。卡片仅需 SYSTEM_ALERT_WINDOW,不再受 Usage Access 限制。
+
+### 6.4 驻车视频(VideoInCar):改为常驻允许
+- 本 fork 无挡位数据源(android.car 属性在 Android 9 车机不可用,原有 BYD 挡位读取已随组 5 删除),`CarPlayVideo.readParked()` 恒返回 null,使该功能实际处于关闭状态。
+- 现改为 `VideoInCar.allowed = true` 常量,删除 `VideoInCarGate` 轮询线程与 `readParked`/`onVideoAllowedChanged` 接口。
+- **影响**:行车中也可播放视频,原"离开 P 挡即关闭播放器"的安全门不复存在;iPhone 侧会把车机视为支持车内视频。恢复门控需要另接挡位源。
+
+### 6.5 组 1 仪表盘集群:暂不恢复
+`ClusterMapPresentation`/`DiLink51ClusterLayout`/`DiLink51ClusterMonitor`/`ClusterActivityState` 已删除。`CarPlayClusterDisplay`、`AirPlayConfig.cluster`、stream 111 处理与 `AirPlayPersistence` 的 cluster 键保留为 PSA 恢复基础。要点:先实测 `dumpsys display` 确认液晶仪表是否暴露为 presentation display;BYD 版的找屏(层名)、指纹门、主题/可见性(Usage Access 监控)与 1920×720 几何都不可复用。`CarPlayHostActivity` 中把 `cluster = null` 改回布局的 `streamConfig()` 并复原 surface 交接(交接时不可先清旧 surface,否则解码器丢失参考帧、stream 111 会等 IDR)即接回链路。

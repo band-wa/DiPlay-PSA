@@ -8,6 +8,6 @@ Diagnostic export is initiated by you. Reports include app/device versions, disp
 
 Microphone access supports Siri and calls. Bluetooth/Nearby devices and Wi-Fi/Location permissions support discovery and transport. The optional local VPN permission supports the USB link; it does not provide a remote internet VPN.
 
-DiPlay declares the Android Usage Access permission for an optional launcher map card that would show only over a home screen. In this fork that feature is inactive: its settings screen and the dashboard map stream it relied on were removed (see [BYD_REMOVAL_AUDIT.md](BYD_REMOVAL_AUDIT.md)). App-activity history is not read or retained in normal operation, and no usage data is uploaded.
+This fork declares neither Usage Access nor the launcher map-embedding service. The optional centre map card draws only with the "display over other apps" permission, and app-activity history is never read or retained (see [BYD_REMOVAL_AUDIT.md](BYD_REMOVAL_AUDIT.md)).
 
 The static website has no analytics script or account. GitHub Pages, GitHub and Telegram apply their own policies when you use those services.

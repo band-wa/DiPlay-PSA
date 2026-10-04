@@ -149,7 +149,6 @@ class CarPlayController(
     private val savePairRecord: (LockdownPairRecord) -> Unit = {},
     private val clearPairRecord: () -> Unit = {},
     private val locationProvider: Iap2LocationProvider? = null,
-    private val vehicleStatusProvider: com.shilapi.xcertplay.transport.VehicleStatusProvider? = null,
 ) : Closeable {
     init {
         require(!config.locationReportingEnabled || locationProvider != null) {
@@ -210,7 +209,6 @@ class CarPlayController(
 
     /** Video in car; set before [start] to offer it to the iPhone (with AirPlayConfig.videoInCar). */
     @Volatile var videoListener: CarPlayVideoListener? = null
-    @Volatile private var videoGate: VideoInCarGate? = null
 
     /** Answers the iPhone on a video in car remote control session; a network write, any thread. */
     fun sendVideoMessage(streamId: Long, message: Map<String, Any?>): Boolean =
@@ -364,13 +362,6 @@ class CarPlayController(
             if (closed) return
         }
         connectionDiagnostic("start transport=${config.transport}")
-        videoListener?.let { listener ->
-            videoGate = VideoInCarGate(listener::readParked) { allowed ->
-                val sent = activeSession?.setVideoPlaybackAllowed(allowed)
-                debugLog("video in car allowed=$allowed sent=${sent ?: "no session"}")
-                listener.onVideoAllowedChanged(allowed)
-            }.also { it.start() }
-        }
         if (config.transport == CarPlayTransport.WIRED) {
             permissionCloseable = iphoneHost.registerPermissionReceiver(::onIphonePermission)
             attachCloseable = iphoneHost.registerAttachReceiver(::onIphoneAttached)
@@ -439,7 +430,6 @@ class CarPlayController(
         }
         val teardownStarted = System.nanoTime()
         connectionDiagnostic("teardown begin transport=${config.transport}")
-        videoGate?.close()
         closeReceivers()
         availabilityPollGeneration.incrementAndGet()
         wirelessGeneration.incrementAndGet()
@@ -1086,7 +1076,6 @@ class CarPlayController(
                 endpoint = endpoint,
                 timeoutMillis = controlLoopTimeoutMillis(),
                 locationProvider = locationProvider,
-                vehicleStatusProvider = vehicleStatusProvider,
                 locationRequest = wirelessLocationRequest,
                 onIncoming = ::onRouteFrame,
                 onProgress = { message ->
@@ -1178,7 +1167,6 @@ class CarPlayController(
                         endpoint = endpoint,
                         timeoutMillis = Iap2WirelessControlClient.NO_TIMEOUT_MILLIS,
                         locationProvider = locationProvider,
-                        vehicleStatusProvider = vehicleStatusProvider,
                         // The iPhone asks for location only on the Bluetooth link (see Iap2LocationRequest).
                         locationRequest = wirelessLocationRequest,
                         continueLocationRequest = true,
@@ -1702,7 +1690,6 @@ class CarPlayController(
                 availableCurrentMilliAmps = config.availableCurrentMilliAmps,
                 timeoutMillis = controlLoopTimeoutMillis(),
                 locationProvider = locationProvider,
-                vehicleStatusProvider = vehicleStatusProvider,
                 onIncoming = ::onRouteFrame,
                 onProgress = { message -> debugLog("wired $message") },
             )

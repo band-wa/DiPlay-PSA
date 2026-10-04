@@ -24,9 +24,9 @@ import kotlin.math.hypot
 
 /**
  * The dashboard map (CarPlay stream 111) as a floating card on the centre screen while DiPlay is in
- * the background; with Usage Access only over a home screen (see [HomeScreenMonitor]). A second decoder draws the
- * stream here, so the dashboard keeps its map. Needs "display over other apps"
- * (SYSTEM_ALERT_WINDOW). A tap opens CarPlay, dragging moves the card and pinching resizes it.
+ * the background. A second decoder draws the stream here, so the dashboard keeps its map. Needs
+ * "display over other apps" (SYSTEM_ALERT_WINDOW). A tap opens CarPlay, dragging moves the card and
+ * pinching resizes it.
  */
 internal object CenterMapOverlay {
     const val TAG = "DiPlay-CenterMap"

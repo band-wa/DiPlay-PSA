@@ -4,8 +4,9 @@ import java.math.BigInteger
 import java.util.Base64
 
 /**
- * iOS 27 "video in car": while the car is parked, the iPhone hands the head unit a media URL and
- * drives playback; the head unit plays it in its own player. Observed with an iPhone on iOS 27 and
+ * iOS 27 "video in car": the iPhone hands the head unit a media URL and drives playback; the head
+ * unit plays it in its own player. A stock receiver only does this while the car is parked, but this
+ * fork has no gear source (see [allowed]). Observed with an iPhone on iOS 27 and
  * checked against Apple's CarPlay Simulator (Additional Tools for Xcode 27) and its AirPlay web app.
  *
  * - /info carries [info] (videoPlaybackInfo); SETUP then enables the [FEATURE] the iPhone proposes.
@@ -33,8 +34,12 @@ object VideoInCar {
     const val ERROR_DECODER = -12911
     const val ERROR_INCOMPATIBLE_ASSET = -12927
 
-    /** Whether video may play now; the host sets it from the car's gear (P only). */
-    @Volatile var allowed = false
+    /**
+     * Whether video may play now. A stock receiver derives this from the car's gear (P only), but this
+     * fork has no gear source on the PSA head unit, so playback is always allowed: the iPhone is told
+     * `videoPlaybackAllowed: true` and the player may open at any time, including while driving.
+     */
+    const val allowed = true
 
     /** Bits the AirPlay web app's manifest adds to the legacy feature bits (featureList.additionalAirPlayFeatures). */
     private val ADDITIONAL_FEATURE_BITS = listOf(0, 64)

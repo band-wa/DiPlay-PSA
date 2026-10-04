@@ -22,11 +22,12 @@ class VideoInCarTest {
     }
 
     @Test
-    fun videoPlaybackInfoIsDeclaredOnlyWhenEnabled() {
+    fun videoPlaybackInfoIsDeclaredWhenEnabledAndAllowed() {
         assertFalse(AirPlayInfoPlist.build(config).containsKey("videoPlaybackInfo"))
 
         val info = AirPlayInfoPlist.build(config.copy(videoInCar = true))["videoPlaybackInfo"] as Map<*, *>
-        assertEquals(false, info["videoPlaybackAllowed"])
+        // This fork has no gear source, so playback is allowed everywhere (see VideoInCar.allowed).
+        assertEquals(true, info["videoPlaybackAllowed"])
         assertEquals("465TVmEAAAAB", info["featuresEx"])
         assertEquals(false, (info["playbackCapabilities"] as Map<*, *>)["supportsFPSSecureStop"])
     }

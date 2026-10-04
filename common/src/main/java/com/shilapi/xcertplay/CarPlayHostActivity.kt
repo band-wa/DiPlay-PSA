@@ -142,8 +142,6 @@ class CarPlayHostActivity : ComponentActivity() {
             hardwareVersion = "1.0",
             carPlayUsbInterfaceNumber = 3,
             locationInformationEnabled = locationReportingEnabled,
-            vehicleStatusEnabled = false,
-            vehicleSpeedEnabled = false,
         ),
         label = "DiPlay",
         hostName = "diplay-" + DiPlayBootstrap.deviceId(airPlayIdentity).replace(":", "").lowercase(),
@@ -273,14 +271,8 @@ class CarPlayHostActivity : ComponentActivity() {
     private var controller: CarPlayController? = null
     private var currentSurface: Surface? = null
     private var currentSurfaceTexture: SurfaceTexture? = null
-    // Copies of stream 111 outside the dashboard (centre card, launcher maps) each get their own decoder.
+    // The dashboard map as a card outside the dashboard gets its own decoder.
     private val mirrorSink: (String, Surface?) -> Unit = { key, surface -> sink?.setMirrorSurface(SCREEN_TYPE_ALT, key, surface) }
-    private val mirrorsChanged: () -> Unit = {
-        if (MapMirrors.launcherShowsMap) CenterMapOverlay.hide()
-    }
-    // With Usage Access the card shows only over a home screen; null = not known (no monitor).
-    private var homeMonitor: HomeScreenMonitor? = null
-    private var homeScreenVisible: Boolean? = null
     private val hideIdleCenterMap = Runnable {
         if (SCREEN_TYPE_ALT !in activeScreenStreamTypes) CenterMapOverlay.hide()
     }
@@ -416,7 +408,6 @@ class CarPlayHostActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         CenterMapOverlay.requestShow = ::showCenterMap
         MapMirrors.sink = mirrorSink
-        MapMirrors.onChanged = mirrorsChanged
         languagePreferenceAtCreate = AppLocale.preference(this)
         if (intent.action == "android.hardware.usb.action.USB_DEVICE_ATTACHED") {
             AirPlayPersistence.saveWirelessEnabled(this, false)
@@ -602,8 +593,6 @@ class CarPlayHostActivity : ComponentActivity() {
         mainHandler.removeCallbacks(pollConfiguration)
         mainHandler.post(pollConfiguration)
         CenterMapOverlay.onDiPlayScreenShown()
-        homeMonitor?.stop()
-        homeScreenVisible = null
     }
 
     override fun onResume() {
@@ -659,36 +648,17 @@ class CarPlayHostActivity : ComponentActivity() {
         if (isDestroyed || shuttingDown.get() || sink == null) return
         if (!AirPlayPersistence.loadCenterMapOverlay(this) || !AirPlayPersistence.loadClusterMapEnabled(this)) return
         if (!AirPlayPersistence.loadCenterMapFollowsDashboard(this)) return
-        if (MapMirrors.launcherShowsMap) return // the launcher has the map on its own screen
         // Without the stream the card would stay black; it follows once the stream starts.
         if (SCREEN_TYPE_ALT !in activeScreenStreamTypes) return
         if (!CenterMapOverlay.permitted(this)) {
             appendLog("Centre map: no permission to draw over other apps")
             return
         }
-        // Without Usage Access the card shows over any app, as before.
-        if (HomeScreenMonitor.hasAccess(this)) {
-            val monitor = homeMonitor ?: HomeScreenMonitor(this, ::onHomeScreenVisible).also { homeMonitor = it }
-            if (!monitor.running) {
-                monitor.start() // its first answer shows the card
-                return
-            }
-            if (homeScreenVisible != true) {
-                CenterMapOverlay.hide()
-                return
-            }
-        }
         if (CenterMapOverlay.shown) return
         val shown = CenterMapOverlay.show(applicationContext, MapMirrors.STREAM_ASPECT, ::onCenterMapSurface) {
             startActivity(Intent(this, CarPlayHostActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
         }
         appendLog("Centre map: card ${if (shown) "shown" else "failed"} streamActive=${SCREEN_TYPE_ALT in activeScreenStreamTypes}")
-    }
-
-    private fun onHomeScreenVisible(visible: Boolean) {
-        homeScreenVisible = visible
-        appendLog("Centre map: home screen ${if (visible) "in front" else "not in front"}")
-        if (!visible) CenterMapOverlay.hide() else if (!CenterMapOverlay.diPlayInFront()) showCenterMap()
     }
 
     private fun onCenterMapSurface(surface: Surface?) {
@@ -710,14 +680,11 @@ class CarPlayHostActivity : ComponentActivity() {
 
     override fun onDestroy() {
         mainHandler.removeCallbacks(hideIdleCenterMap)
-        homeMonitor?.stop()
         CenterMapOverlay.hide()
         if (CenterMapOverlay.requestShow == (::showCenterMap)) CenterMapOverlay.requestShow = null
         if (MapMirrors.sink === mirrorSink) {
             MapMirrors.sink = null
-            MapMirrors.setStreamActive(false)
         }
-        if (MapMirrors.onChanged === mirrorsChanged) MapMirrors.onChanged = null
         mainHandler.removeCallbacks(applyDisplaySize)
         mainHandler.removeCallbacks(expireOldLogLines)
         mainHandler.removeCallbacks(pollConfiguration)
@@ -3106,8 +3073,7 @@ class CarPlayHostActivity : ComponentActivity() {
                 "video=${if (airPlayConfig.hevc) "HEVC" else "H.264"} " +
                 "decoder=${if (airPlayConfig.hevc && hevcSoftwareDecoderEnabled) "software" else "hardware"} " +
                 "microphone=${airPlayConfig.microphone} " +
-                "location=${if (config.locationReportingEnabled) "enabled" else "disabled"}" +
-                "${if (config.identification.vehicleSpeedEnabled) "+wheel-speed" else ""} " +
+                "location=${if (config.locationReportingEnabled) "enabled" else "disabled"} " +
                 "mfi=${mfiTargetLabel(config.mfiTarget)}",
         )
         Log.i(
@@ -3146,7 +3112,6 @@ class CarPlayHostActivity : ComponentActivity() {
             savePairRecord = { record -> AirPlayPersistence.saveLockdownRecord(this, record) },
             clearPairRecord = { AirPlayPersistence.clearLockdownRecord(this) },
             locationProvider = locationProvider,
-            vehicleStatusProvider = null,
         )
         controller = next
         CarPlayMediaKeys.attach(this, next)
@@ -3596,7 +3561,6 @@ class CarPlayHostActivity : ComponentActivity() {
                 activeScreenStreamTypes.remove(type)
             }
             if (type == SCREEN_TYPE_ALT) {
-                MapMirrors.setStreamActive(active)
                 if (active) {
                     mainHandler.removeCallbacks(hideIdleCenterMap)
                     if (!CenterMapOverlay.shown) CenterMapOverlay.scheduleShow()
