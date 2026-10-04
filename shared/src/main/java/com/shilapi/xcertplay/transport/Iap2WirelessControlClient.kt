@@ -28,6 +28,8 @@ class Iap2WirelessControlClient(
         locationRequest: Iap2LocationRequest? = null,
         continueLocationRequest: Boolean = false,
         onReady: () -> Unit = {},
+        beforeStartSession: () -> Unit = {},
+        onStartSessionSent: (Iap2StartSessionSent) -> Unit = {},
         onIncoming: (Iap2Frame) -> Unit = {},
         onProgress: (String) -> Unit = {},
     ): Iap2WirelessControlResult {
@@ -152,7 +154,8 @@ class Iap2WirelessControlClient(
                     CARPLAY_AVAILABILITY -> {
                         onProgress("iap2 rx=0x4300 carplay-availability")
                         onProgress(carPlayAvailabilityDiagnostic(incoming))
-                        send(carPlayStartSession(endpoint), deadlineNanos)
+                        beforeStartSession()
+                        sendStartSession(endpoint, { send(it, deadlineNanos) }, onStartSessionSent)
                         stage = later(stage, Iap2WirelessControlStage.CARPLAY_START_SENT)
                         carPlayStartSessionsSent++
                         onProgress("iap2 tx=0x4301 carplay-start-session")
@@ -358,3 +361,15 @@ data class Iap2WirelessControlResult(
     val postTransportWiFiConfigurationsSent: Int,
     val wirelessCarPlayAvailableSeen: Boolean,
 )
+
+/** 仅在 StartSession 发送成功后产生，不通过日志驱动超时。 */
+data class Iap2StartSessionSent(val sentAtNanos: Long)
+
+internal fun sendStartSession(
+    endpoint: Iap2WirelessCarPlayEndpoint,
+    send: (Iap2Frame) -> Unit,
+    onSent: (Iap2StartSessionSent) -> Unit,
+) {
+    send(Iap2WirelessControlClient.carPlayStartSession(endpoint))
+    onSent(Iap2StartSessionSent(System.nanoTime()))
+}

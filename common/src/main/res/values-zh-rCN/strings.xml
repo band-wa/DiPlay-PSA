@@ -425,4 +425,8 @@
     <string name="usb_auto_confirm_desc">在出现 CarPlay USB 权限弹窗时自动勾选默认并点击确定</string>
     <string name="adapt_pip_resolution">画中画与分屏自适应</string>
     <string name="adapt_pip_resolution_description">切换至桌面画中画或分屏悬浮小窗口时，自动断开重连以适应窗口分辨率，消除上下左右黑边。保持关闭可实现 0 毫秒 GPU 秒级自适应且不重连。</string>
+    <string name="hotspot_network_not_ready">热点网络未就绪</string>
+    <string name="first_tcp_timeout">等待 iPhone 接入 CarPlay 超时</string>
+    <string name="wireless_startup_retries_exhausted">自动重试已停止，请检查连接后手动重试。</string>
+    <string name="retry_carplay_connection">重新连接</string>
 </resources>

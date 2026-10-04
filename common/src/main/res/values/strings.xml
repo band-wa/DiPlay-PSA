@@ -425,4 +425,8 @@
     <string name="usb_auto_confirm_desc">Automatically checks Always allow and confirms the Android USB accessory prompt for CarPlay</string>
     <string name="adapt_pip_resolution">Adapt multi-window resolution</string>
     <string name="adapt_pip_resolution_description">Reconnect CarPlay to adapt stream resolution to multi-window or picture-in-picture aspect ratio. Leave disabled for instant 0ms GPU scaling.</string>
+    <string name="hotspot_network_not_ready">Hotspot network is not ready</string>
+    <string name="first_tcp_timeout">The iPhone did not connect to CarPlay in time</string>
+    <string name="wireless_startup_retries_exhausted">Automatic retries stopped. Check the connection and retry manually.</string>
+    <string name="retry_carplay_connection">Retry connection</string>
 </resources>
