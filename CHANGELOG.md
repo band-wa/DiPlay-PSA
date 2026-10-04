@@ -7,6 +7,8 @@ Fork of [DiPlay](https://github.com/shihabal3amri/DiPlay) aimed at Peugeot/Citro
 - Offer local offline authentication only. The CH341-bridge, I2C and remote authentication sources are not offered here; the identity requirements for builds are unchanged (see [docs/BUILD.md](docs/BUILD.md)).
 - Enable R8 code and resource shrinking for the mobile release build.
 - Open the settings menu from inside a running session with the configured swipe gesture, including system bar visibility, and restore safe-area edits made in the menu when it is cancelled.
+- Adjust the CarPlay picture while it is on screen: brightness, contrast, saturation and warmth are applied as a colour matrix on the video texture, with an original/comparison switch and a reset. Nothing is renegotiated, restarted or applied to the head-unit user interface.
+- Fit the CarPlay preparation screen into short landscape displays and respect system bar and cutout insets, so the title, instructions and buttons stay fully visible on head-unit screens.
 - Support multi-window and split-screen layouts with compact cards, instant GPU matrix scaling, preserved video geometry, and an optional multi-window resolution adaptation toggle that stays off by default.
 - Export diagnostics without a head-unit file picker: reports are saved inside the app and can be viewed or copied there.
 - Add an Accessibility service that confirms DiPlay's own Android USB permission dialog, restricted to system USB dialogs for this app.
