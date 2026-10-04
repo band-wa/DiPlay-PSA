@@ -1,11 +1,11 @@
-# DiPlay PSA fork — unreleased
+# DiPlay PSA fork — 0.2.11-psa.1
 
 Fork of [DiPlay](https://github.com/shihabal3amri/DiPlay) aimed at Peugeot/Citroën PSA head units running Android 9. The CarPlay protocol, audio, video and touch paths stay upstream; the vendor-specific head-unit integrations do not.
 
 - Remove the BYD instrument-cluster, windscreen-HUD, launcher-map-card, vehicle-data and network-ADB integrations together with their settings, resources, tests and documentation. The default OEM label is now PSA; CarPlay audio, video, touch and wireless connection paths are unaffected ([BYD_REMOVAL_AUDIT.md](docs/BYD_REMOVAL_AUDIT.md)).
 - Fix connection settings saved while the projection screen was in the background: the screen is resumed with FLAG_ACTIVITY_REORDER_TO_FRONT, so a Wi-Fi Direct choice made on the settings screen was ignored until the app was recreated.
 - Offer local offline authentication only. The CH341-bridge, I2C and remote authentication sources are not offered here; the identity requirements for builds are unchanged (see [docs/BUILD.md](docs/BUILD.md)).
-- Enable R8 code and resource shrinking for the mobile release build.
+- Enable R8 code and resource shrinking for the mobile release build, keeping original class and enum names (`-dontobfuscate`) so in-app diagnostics and exported reports stay readable on a head unit.
 - Open the settings menu from inside a running session with the configured swipe gesture, including system bar visibility, and restore safe-area edits made in the menu when it is cancelled.
 - Adjust the CarPlay picture while it is on screen: brightness, contrast, saturation and warmth are applied as a colour matrix on the video texture, with an original/comparison switch and a reset. Nothing is renegotiated, restarted or applied to the head-unit user interface.
 - Fit the CarPlay preparation screen into short landscape displays and respect system bar and cutout insets, so the title, instructions and buttons stay fully visible on head-unit screens.
