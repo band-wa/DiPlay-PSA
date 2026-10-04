@@ -422,4 +422,6 @@
     <string name="usb_auto_confirm_title">Auto-confirm USB permission</string>
     <string name="usb_auto_confirm_subtitle">Automatically accept the Android USB permission prompt when an iPhone is connected via cable (requires Accessibility Service)</string>
     <string name="usb_auto_confirm_desc">Automatically checks Always allow and confirms the Android USB accessory prompt for CarPlay</string>
+    <string name="adapt_pip_resolution">Adapt multi-window resolution</string>
+    <string name="adapt_pip_resolution_description">Reconnect CarPlay to adapt stream resolution to multi-window or picture-in-picture aspect ratio. Leave disabled for instant 0ms GPU scaling.</string>
 </resources>
