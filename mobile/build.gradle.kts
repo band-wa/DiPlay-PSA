@@ -25,6 +25,14 @@ android {
 
     localAuthenticationAssets?.let { sourceSets.getByName("main").assets.srcDir(it) }
 
+    packaging {
+        resources {
+            // R8 strips the Picnic post-quantum code entirely; the lowmc tables are read
+            // only by that engine, so shipping them would be dead weight in the APK.
+            excludes += "org/bouncycastle/pqc/**"
+        }
+    }
+
     signingConfigs {
         create("release") {
             storeFile = file(
@@ -44,8 +52,13 @@ android {
         }
         release {
             optimization {
-                enable = false
+                enable = true
             }
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro",
+            )
             signingConfig = signingConfigs.getByName("release")
         }
     }
