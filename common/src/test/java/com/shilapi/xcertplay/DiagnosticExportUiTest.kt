@@ -11,7 +11,6 @@ import androidx.core.app.ActivityOptionsCompat
 import com.shilapi.xcertplay.host.R
 import java.io.File
 import org.junit.Assert.*
-import org.junit.Assume
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -24,20 +23,8 @@ import org.robolectric.shadows.ShadowContentResolver
 import org.robolectric.util.ReflectionHelpers
 
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [28], qualifiers = "en")
+@Config(sdk = [28], qualifiers = "en", shadows = [FileProviderPathTestShadow::class])
 class DiagnosticExportUiTest {
-    /**
-     * `androidx.core` FileProvider matches a configured root with a hardcoded `/` separator, so an
-     * app-private directory can never match a Windows canonical path. The provider roots are
-     * meaningful on POSIX filesystems only.
-     */
-    @Before fun requirePosixFileProviderRoots() {
-        Assume.assumeTrue(
-            "FileProvider root matching requires '/' path separators",
-            File.separatorChar == '/',
-        )
-    }
-
     @Test fun missingPickerSavesAReportAndProvidesSelectableTextInsideDiPlay() {
         val controller = Robolectric.buildActivity(DiPlayActivity::class.java).setup()
         val activity = controller.get()
@@ -61,8 +48,12 @@ class DiagnosticExportUiTest {
                 shadowOf(Looper.getMainLooper()).idle()
             }
             val saved = requireNotNull(ShadowAlertDialog.getLatestAlertDialog())
+            val reports = File(context.getExternalFilesDir(null)!!, "diagnostic-reports")
+            val file = reports.listFiles()!!.single()
+            assertTrue(file.name.endsWith(".txt"))
             assertTrue(descendants(saved.window!!.decorView).filterIsInstance<TextView>()
-                .any { it.text == activity.getString(R.string.diagnostic_report_saved_in_app) })
+                .any { it.text.contains(file.absolutePath) })
+            assertTrue(file.readText().contains("Android 9 / API 28"))
             saved.getButton(android.app.AlertDialog.BUTTON_POSITIVE).performClick()
             shadowOf(Looper.getMainLooper()).idle()
             val viewer = ShadowAlertDialog.getLatestAlertDialog()

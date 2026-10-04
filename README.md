@@ -36,6 +36,8 @@ Earlier releases were tested on the development DiLink5.1 car: live windshield g
 
 Optional video requires network ADB and a valid parked-gear reading. Battery, dashboard and call effects depend on firmware and Android support. See [0.2.10 release notes](docs/RELEASE-NOTES-0.2.10.md) for all ten contributions, regression fixes and validation limits. Existing device-specific wireless loss, microphone and reconnect reports still need hardware testing.
 
+If a problem remains, use **Settings → Diagnostics → Save diagnostic report**. Android 10+ saves to **Downloads/DiPlay**; Android 9 uses the document picker. If the picker or Downloads storage is unavailable, the report saves to **Android/data/com.shihab.diplay/files/diagnostic-reports/** and the confirmation shows the full `.txt` path. If that storage is also unavailable, the report saves privately in DiPlay. You can view or share either fallback report from the confirmation. Review the `.txt` file and attach it to your [issue](https://github.com/shihabal3amri/DiPlay/issues), including Android version, phone/iOS, connection mode, steps and failure time. Reports are shared only when you choose; never post your hotspot password.
+
 ## Documentation
 
 - [Install and connect](docs/INSTALL.md)
