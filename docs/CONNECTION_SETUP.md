@@ -13,6 +13,18 @@ default; Wi-Fi Direct and USB remain available. Previous Local hotspot
 selections switch to built-in hotspot. Check and save the car's real hotspot
 details before connecting.
 
+IN-SESSION SETTINGS AND AUTHENTICATION — DIPLAY
+In CarPlay, swipe down with the configured number of fingers (2, 3 or 4;
+default 3) to open the hidden settings menu. Opening or cancelling the menu
+keeps a healthy session connected. Save and reconnect applies the edits;
+Back or X discards them. A connection lost while the menu is open recovers
+on closing, unless Wi-Fi requires the existing manual reset action.
+
+Authentication is fixed to Local offline in this fork: the first connection
+needs a provisioned identity (see docs/BUILD.md), and DiPlay never falls back
+to another authentication source. The CH341-bridge, I2C and remote
+authentication options are not offered here.
+
 BUILT-IN HOTSPOT SETUP — BOTH APPS
 1. In the car's settings, turn on its built-in Wi-Fi hotspot. Select 5 GHz
    if available. Note the hotspot name and password exactly.
