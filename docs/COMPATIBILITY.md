@@ -4,7 +4,7 @@ This public preview is an independent receiver, not an Apple-certified CarPlay a
 
 | Area | Current scope |
 | --- | --- |
-| Head unit | Android 9+ APK; wireless Wi-Fi Direct path needs Android 10+ |
+| Head unit | Android 9+ APK; wired USB, car hotspot and Wi-Fi Direct, including a requested 5 GHz Wi-Fi Direct channel on Android 9 |
 | Phone | Standard, non-jailbroken iPhone with CarPlay enabled; device/iOS compatibility varies |
 | Physical evidence | Previous private builds: wired and wireless picture, touch and audio confirmed on the development car with iPhone XS / iOS 18.7.10 |
 | Other cars | Mixed community reports across DiLink generations; not a certified model support list |
@@ -15,6 +15,12 @@ This public preview is an independent receiver, not an Apple-certified CarPlay a
 ## Car hotspot
 
 Car hotspot starts CarPlay on the development car using scoped IPv6. The phone must join the configured car hotspot. Neither result guarantees support on every firmware. The BYD instrument-cluster and HUD integration is removed in this fork; see [BYD_REMOVAL_AUDIT.md](BYD_REMOVAL_AUDIT.md).
+
+## Wi-Fi Direct on Android 9
+
+This fork asks the framework for the channel the user selected before it creates the group. Android 9 exposes no public way to request an operating frequency or to read the one the group ended up on, so the manager calls the hidden `WifiP2pManager.setWifiP2pChannels` and reports the requested channel as unverified instead of pretending it was confirmed. Verified on a Redmi K20 Pro running Android 9: channel 149 (5 GHz, 5745 MHz) with an iPhone joining as a legacy client and completing a full CarPlay session.
+
+The accessory address sent to the iPhone over iAP2 is IPv4 for Wi-Fi Direct and LocalOnlyHotspot. Both are access-point style interfaces that the app itself owns, and on some Android 9 firmwares the link-local IPv6 route of such an interface is installed in a per-network policy table that no routing rule selects. The iPhone then reaches the accessory and never receives a reply, so the connection fails with no error on either side. Carrier hotspot mode keeps using IPv6: there the car owns the network and the phone is a client of it.
 
 ## Known limitations
 

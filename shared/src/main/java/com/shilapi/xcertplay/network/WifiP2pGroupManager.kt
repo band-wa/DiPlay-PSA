@@ -24,7 +24,6 @@ import java.net.Inet6Address
 import java.net.InetAddress
 import java.net.NetworkInterface
 import java.net.SocketException
-import java.net.UnknownHostException
 import java.security.SecureRandom
 import java.util.Collections
 import java.util.concurrent.CountDownLatch
@@ -98,8 +97,12 @@ class WifiP2pGroupManager(
     }
 
     override fun start(timeoutMillis: Long): WirelessHotspotInfo {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
-            throw IOException("Wi-Fi P2P credentials require Android 10 (API 29) or newer")
+        // Android 9 cannot name the group, cannot set its passphrase and cannot read the
+        // negotiated frequency, but it can still pin the group-owner channel through the hidden
+        // channel request. See WifiP2pLegacyChannels.
+        val legacyChannels = Build.VERSION.SDK_INT < Build.VERSION_CODES.Q
+        if (legacyChannels) {
+            diagnostic("Wi-Fi P2P legacy channel API sdk=${Build.VERSION.SDK_INT}")
         }
         check(Looper.myLooper() != Looper.getMainLooper()) {
             "WifiP2pGroupManager.start must not run on the main thread"
@@ -148,7 +151,9 @@ class WifiP2pGroupManager(
                 callbackThread = thread
             }
 
-            logP2pState(attempt, p2pChannel)
+            // requestP2pState() only exists from Android 10; its annotation alone would not stop
+            // the call from failing on an older framework.
+            if (!legacyChannels) logP2pState(attempt, p2pChannel)
             // Preferences disappear on reinstall, but the scoped namespace survives.
             val existing = requestGroupInfo(attempt, p2pChannel, REQUEST_POLL_NANOS, requireResponse = true)
             diagnostic("Wi-Fi P2P existingGroup=${existing != null}")
@@ -184,7 +189,8 @@ class WifiP2pGroupManager(
                 request = { selection ->
                     ensureStartActive(attempt)
                     if (remainingNanos(deadlineNanos) == 0L) throw IOException("Wi-Fi Direct startup timed out")
-                    val config = if (selection.mode == P2pCreationMode.SYSTEM_DEFAULT) null else {
+                    if (legacyChannels) requestLegacyOperatingChannel(attempt, p2pChannel, selection)
+                    val config = if (legacyChannels || selection.mode == P2pCreationMode.SYSTEM_DEFAULT) null else {
                         P2pConfigBuildDiagnostics.build(Build.VERSION.SDK_INT, selection, diagnostic) {
                             val builder = WifiP2pConfig.Builder()
                                 .setNetworkName(credentials.ssid)
@@ -212,7 +218,13 @@ class WifiP2pGroupManager(
                     val usingRemembered = preferred?.request == selection
                     if (usingRemembered) synchronized(stateLock) { rememberedAttempt = preferred }
                     try {
-                        p2pManager.createGroup(p2pChannel, config, createActionListener(attempt, request))
+                        if (legacyChannels) {
+                            // The two-argument overload lets the framework generate the SSID and
+                            // passphrase, which is the only option Android 9 offers.
+                            p2pManager.createGroup(p2pChannel, createActionListener(attempt, request))
+                        } else {
+                            p2pManager.createGroup(p2pChannel, config, createActionListener(attempt, request))
+                        }
                         awaitGroupCreated(attempt, request, deadlineNanos, timeoutMillis)
                     } catch (failure: P2pCreateRejected) {
                         if (usingRemembered && failure.reason == WifiP2pManager.ERROR && preferred != null) {
@@ -222,28 +234,41 @@ class WifiP2pGroupManager(
                     }
                 },
             )
-            val group = awaitUsableGroup(
-                attempt = attempt,
-                channel = p2pChannel,
-                credentials = if (creation.mode == P2pCreationMode.SYSTEM_DEFAULT) null else credentials,
-                deadlineNanos = deadlineNanos,
-                timeoutMillis = timeoutMillis,
-            )
+            val group = if (legacyChannels) {
+                awaitUsableGroupLegacy(attempt, p2pChannel, creation, deadlineNanos, timeoutMillis)
+            } else {
+                awaitUsableGroup(
+                    attempt = attempt,
+                    channel = p2pChannel,
+                    credentials = if (creation.mode == P2pCreationMode.SYSTEM_DEFAULT) null else credentials,
+                    deadlineNanos = deadlineNanos,
+                    timeoutMillis = timeoutMillis,
+                )
+            }
             if (!ownership.edit().putString("owned_ssid", group.ssid).commit()) {
                 throw IOException("Could not record Wi-Fi P2P group ownership")
             }
-            diagnostic("Wi-Fi P2P ready mode=${creation.mode} band=${group.bandLabel} channel=${group.channel} frequencyMHz=${group.frequencyMHz}")
-            diagnostic("Wi-Fi P2P channel requestedMHz=${creation.frequencyMHz ?: "auto"} actualMHz=${group.frequencyMHz} matched=${creation.frequencyMHz?.let { it == group.frequencyMHz } ?: "system_selected"}")
-            if (preferredChannel != WifiP2pChannels.AUTO && group.frequencyMHz != creation.frequencyMHz) {
-                throw P2pChannelUnavailableException(preferredChannel,
-                    "The car selected channel ${group.channel} instead.")
+            diagnostic("Wi-Fi P2P ready mode=${creation.mode} band=${group.bandLabel} channel=${group.channel} " +
+                "frequencyMHz=${group.frequencyMHz} verified=${!legacyChannels}")
+            if (legacyChannels) {
+                // Android 9 never reports the negotiated frequency. The requested channel is the
+                // best available answer, and the framework callback proved it was applied.
+                diagnostic("Wi-Fi P2P channel requestedMHz=${creation.frequencyMHz ?: "auto"} " +
+                    "actualMHz=unavailable matched=unverified")
+            } else {
+                diagnostic("Wi-Fi P2P channel requestedMHz=${creation.frequencyMHz ?: "auto"} actualMHz=${group.frequencyMHz} matched=${creation.frequencyMHz?.let { it == group.frequencyMHz } ?: "system_selected"}")
+                if (preferredChannel != WifiP2pChannels.AUTO && group.frequencyMHz != creation.frequencyMHz) {
+                    throw P2pChannelUnavailableException(preferredChannel,
+                        "The car selected channel ${group.channel} instead.")
+                }
             }
             synchronized(stateLock) {
                 ensureStartActiveLocked(attempt)
                 created = true
                 startAttempt = null
-                // Manual experiments must not replace the proven automatic configuration.
-                pendingSuccess = if (preferredChannel == WifiP2pChannels.AUTO) {
+                // Manual experiments must not replace the proven automatic configuration, and a
+                // remembered configuration needs a frequency this framework never reported.
+                pendingSuccess = if (!legacyChannels && preferredChannel == WifiP2pChannels.AUTO) {
                     {
                         configurationMemory.remember(creation, requireNotNull(group.frequencyMHz), stationFrequency)
                     }
@@ -344,6 +369,34 @@ class WifiP2pGroupManager(
                 stateLock.notifyAll()
             }
         }
+    }
+
+    /**
+     * Android 9 cannot name the group or its band. A rejected candidate therefore keeps the
+     * recovery plan honest: a specific channel that this framework will not accept must fail
+     * instead of quietly bringing CarPlay up on whatever band the driver picks.
+     */
+    private fun requestLegacyOperatingChannel(
+        attempt: StartAttempt,
+        channel: WifiP2pManager.Channel,
+        selection: P2pCreationRequest,
+    ) {
+        val requested = selection.frequencyMHz ?: return
+        val operatingChannel = WifiP2pLegacyChannels.operatingChannelFor(requested)
+            ?: throw P2pCreateRejected(
+                WifiP2pManager.ERROR,
+                "Wi-Fi Direct cannot request ${requested}MHz on this Android release",
+            )
+        ensureStartActive(attempt)
+        if (!WifiP2pLegacyChannels.apply(p2pManager, channel, operatingChannel, diagnostic)) {
+            throw P2pCreateRejected(
+                WifiP2pManager.ERROR,
+                "Wi-Fi Direct could not pin channel $operatingChannel on this Android release",
+            )
+        }
+        diagnostic(
+            "Wi-Fi P2P legacy channel applied channel=$operatingChannel frequencyMHz=$requested",
+        )
     }
 
     private fun awaitGroupCreated(
@@ -450,6 +503,100 @@ class WifiP2pGroupManager(
         }
     }
 
+    /**
+     * Android 9 cannot read the negotiated frequency and exposes no builder to name the group, so
+     * only the fields the platform does return are required. The reported channel is the one this
+     * start asked for, and the diagnostics label it unverified.
+     */
+    private fun awaitUsableGroupLegacy(
+        attempt: StartAttempt,
+        channel: WifiP2pManager.Channel,
+        creation: P2pCreationRequest,
+        deadlineNanos: Long,
+        timeoutMillis: Long,
+    ): WirelessHotspotInfo {
+        var lastReason = "group information was not available"
+        while (true) {
+            ensureStartActive(attempt)
+            val remainingNanos = remainingNanos(deadlineNanos)
+            if (remainingNanos <= 0) {
+                throw IOException(
+                    "Timed out after ${timeoutMillis}ms waiting for a usable Wi-Fi P2P group: " +
+                        lastReason,
+                )
+            }
+
+            val group = requestGroupInfo(
+                attempt = attempt,
+                channel = channel,
+                timeoutNanos = minOf(remainingNanos, REQUEST_POLL_NANOS),
+            )
+            if (group == null) continue
+            if (!group.isGroupOwner) {
+                throw IOException("Wi-Fi P2P device became a group client instead of owner")
+            }
+
+            val networkName = group.networkName?.takeIf { it.isNotBlank() }
+            val passphrase = group.passphrase?.takeIf { it.isNotBlank() }
+            val interfaceName = legacyGroupInterface(group)
+            if (networkName == null || passphrase == null || interfaceName == null) {
+                lastReason = "incomplete group details ssid=${networkName != null} " +
+                    "passphrase=${passphrase != null} interface=${interfaceName != null}"
+                continue
+            }
+
+            val hostAddress = awaitInterfaceAddress(attempt, interfaceName, deadlineNanos)
+                ?: requestConnectionAddress(
+                    attempt = attempt,
+                    channel = channel,
+                    timeoutNanos = minOf(remainingNanos(deadlineNanos), REQUEST_POLL_NANOS),
+                )
+            if (hostAddress == null) {
+                lastReason = "interface $interfaceName has no usable IPv6 or IPv4 address"
+                continue
+            }
+
+            val requestedChannel = creation.frequencyMHz
+                ?.let(WifiP2pLegacyChannels::operatingChannelFor) ?: UNKNOWN_CHANNEL
+            return WirelessHotspotInfo(
+                ssid = networkName,
+                passphrase = passphrase,
+                security = groupSecurity(group),
+                // Zero tells the iPhone the channel is unknown, which keeps it scanning instead of
+                // trusting a channel this framework could not confirm.
+                channel = requestedChannel,
+                frequencyMHz = creation.frequencyMHz,
+                bssid = interfaceHardwareAddress(interfaceName)
+                    ?: group.owner?.deviceAddress?.takeIf { it.isNotBlank() },
+                interfaceName = interfaceName,
+                hostAddress = hostAddress,
+                bandLabel = if (requestedChannel == UNKNOWN_CHANNEL) "Auto"
+                    else WifiP2pLegacyChannels.bandLabelFor(requestedChannel),
+                backend = WirelessHotspotBackend.WIFI_P2P,
+            )
+        }
+    }
+
+    /**
+     * WifiP2pGroup.getInterface() predates Android 10 even though it only became public API there,
+     * and a vendor build may still block that non-SDK access. Fall back to the P2P interface the
+     * framework just created, which is the only other interface carrying a P2P address.
+     */
+    private fun legacyGroupInterface(group: WifiP2pGroup): String? {
+        runCatching { group.getInterface() }
+            .getOrNull()
+            ?.takeIf { it.isNotBlank() }
+            ?.let { return it }
+        return runCatching {
+            Collections.list(NetworkInterface.getNetworkInterfaces())
+                .firstOrNull { network ->
+                    network.name?.startsWith("p2p") == true &&
+                        interfaceAddress(network.name) != null
+                }
+                ?.name
+        }.getOrNull()
+    }
+
     private fun requestGroupInfo(
         attempt: StartAttempt,
         channel: WifiP2pManager.Channel,
@@ -504,21 +651,12 @@ class WifiP2pGroupManager(
 
     private fun interfaceAddress(interfaceName: String): InetAddress? {
         val networkInterface = networkInterface(interfaceName) ?: return null
-        var ipv4: InetAddress? = null
-        for (address in Collections.list(networkInterface.inetAddresses)) {
-            if (address is Inet6Address && address.isLinkLocalAddress) {
-                if (address.scopeId == networkInterface.index) return address
-                try {
-                    return Inet6Address.getByAddress(null, address.address, networkInterface)
-                } catch (_: UnknownHostException) {
-                    continue
-                }
-            }
-            if (address is Inet4Address && !address.isLoopbackAddress && ipv4 == null) {
-                ipv4 = address
-            }
-        }
-        return ipv4
+        val address = HotspotAddressPolicy.select(Collections.list(networkInterface.inetAddresses))
+            ?: return null
+        if (address !is Inet6Address || address.scopeId == networkInterface.index) return address
+        // A link-local peer needs the interface scope to be routed by the kernel.
+        return runCatching { Inet6Address.getByAddress(null, address.address, networkInterface) }
+            .getOrDefault(address)
     }
 
     private fun awaitInterfaceAddress(
@@ -526,13 +664,17 @@ class WifiP2pGroupManager(
         interfaceName: String,
         startupDeadlineNanos: Long,
     ): InetAddress? {
-        // Group creation precedes IPv6 link-local configuration on some head units.
-        // Give IPv6 a bounded chance to appear before falling back to IPv4.
+        // Group creation precedes address configuration on some head units. Give IPv4, the address
+        // the iPhone needs to reach, a bounded chance to appear before settling for link-local
+        // IPv6, which cannot route back on every framework.
         val addressDeadline = minOf(startupDeadlineNanos, deadlineAfter(2_000))
+        var pending: InetAddress? = null
         while (true) {
             ensureStartActive(attempt)
             val address = interfaceAddress(interfaceName)
-            if (address is Inet6Address || remainingNanos(addressDeadline) <= 0) return address
+            if (address is Inet4Address) return address
+            if (address != null) pending = address
+            if (remainingNanos(addressDeadline) <= 0) return pending
             Thread.sleep(100)
         }
     }
@@ -762,6 +904,7 @@ class WifiP2pGroupManager(
         const val TAG = "xcertplay-usb"
         const val NANOS_PER_MILLISECOND = 1_000_000L
         const val REMOVE_GROUP_TIMEOUT_MILLIS = 2_000L
+        const val UNKNOWN_CHANNEL = 0
         val REQUEST_POLL_NANOS: Long = TimeUnit.MILLISECONDS.toNanos(500)
         const val TOKEN_ALPHABET =
             "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789"

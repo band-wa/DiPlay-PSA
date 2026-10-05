@@ -35,8 +35,11 @@ class HotspotModeMigrationTest {
         assertEquals(WirelessHotspotMode.WIFI_P2P, AirPlayPersistence.loadWirelessHotspotMode(context))
     }
 
-    @Test @Config(sdk = [28]) fun olderAndroidDoesNotFallBackToRemovedLocalMode() {
+    @Test @Config(sdk = [28]) fun olderAndroidKeepsWifiDirectBecauseTheChannelRequestIsAvailable() {
+        // Android 9 reaches the group-owner channel through the hidden channel request, so a
+        // Wi-Fi Direct selection must survive instead of falling back to the car hotspot.
         prefs.edit().putString("wireless_hotspot_mode", "WIFI_P2P").apply()
-        assertEquals(WirelessHotspotMode.MANUAL, AirPlayPersistence.loadWirelessHotspotMode(context))
+        assertEquals(WirelessHotspotMode.WIFI_P2P, AirPlayPersistence.loadWirelessHotspotMode(context))
+        assertEquals("WIFI_P2P", prefs.getString("wireless_hotspot_mode", null))
     }
 }

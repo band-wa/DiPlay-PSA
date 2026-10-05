@@ -19,6 +19,8 @@ Fork of [DiPlay](https://github.com/shihabal3amri/DiPlay) aimed at Peugeot/Citro
 - Match Apple devices in the USB attach filter so a connected iPhone is offered to DiPlay.
 - Keep the current album art between tracks and show a neutral placeholder instead of a stale cover.
 - Fix Simplified Chinese wording and spacing, including the hotspot description that asked users to use the head unit's own hotspot.
+- Support Wi-Fi Direct on Android 9 head units: when the user selects a channel, the manager pins the group's operating channel through the hidden Wi-Fi P2P channel request before creating the group, and reports that channel as unverified because Android 9 cannot read the group frequency back. Verified end to end on Android 9 with an iPhone joining a 5 GHz (channel 149) group as a legacy client.
+- Send an IPv4 accessory address to the iPhone for Wi-Fi Direct and LocalOnlyHotspot. Both are access-point style interfaces the app owns, and on Android 9 firmwares that install the link-local IPv6 route of such an interface in a policy table no routing rule selects, replies to the iPhone were silently dropped: the phone associated, got a lease, sent its SYN and never received an answer.
 - Freeze this fork as the baseline for future work: upstream is watched read-only, and only necessary patches (confirmed defects, measured performance, protocol compatibility, small self-contained fixes) are cherry-picked. See [docs/FORK_POLICY.md](docs/FORK_POLICY.md).
 
 # DiPlay 0.2.10 — 2026-10-03
