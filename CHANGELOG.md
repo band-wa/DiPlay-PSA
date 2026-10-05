@@ -1,4 +1,4 @@
-# DiPlay PSA fork — 0.2.11-psa.1
+# DiPlay PSA fork — 0.2.11-psa.2
 
 Fork of [DiPlay](https://github.com/shihabal3amri/DiPlay) aimed at Peugeot/Citroën PSA head units running Android 9. The CarPlay protocol, audio, video and touch paths stay upstream; the vendor-specific head-unit integrations do not.
 
