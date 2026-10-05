@@ -13,6 +13,12 @@ Fork of [DiPlay](https://github.com/shihabal3amri/DiPlay) aimed at Peugeot/Citro
 - Export diagnostics without a head-unit file picker: reports are saved inside the app and can be viewed or copied there.
 - Add an Accessibility service that confirms DiPlay's own Android USB permission dialog, restricted to system USB dialogs for this app.
 - Merge upstream generic fixes: settings swipe finger count, location permission flow, media metadata de-duplication, Android 9 AudioTrack property lookup, settled display size, wireless diagnostics with one guarded Android 10 Wi-Fi Direct recovery, codec release and media failure diagnostics, theme observation with own-app process-exit metadata, own-package VPN scope (#168) and preferred Wi-Fi Direct channel selection (#175).
+- Wait for a car hotspot interface that is genuinely usable before wireless startup, so a half-raised access point no longer fails the connection with a wrong address.
+- Recover wireless startup when the iPhone accepts Bluetooth and the hotspot but never opens the AirPlay control connection: the StartSession send now arms a bounded deadline, and failed attempts are retried with backoff, reset after a stable session, and reported with a manual retry button.
+- Save diagnostics reports under Android/data when no head-unit file picker is available, and run the export tests on Windows hosts as well.
+- Match Apple devices in the USB attach filter so a connected iPhone is offered to DiPlay.
+- Keep the current album art between tracks and show a neutral placeholder instead of a stale cover.
+- Fix Simplified Chinese wording and spacing, including the hotspot description that asked users to use the head unit's own hotspot.
 
 # DiPlay 0.2.10 — 2026-10-03
 
