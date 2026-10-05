@@ -123,6 +123,16 @@ val verifyStandaloneAuthentication by tasks.registering {
         check(listOf("identity.pk8", "certificate.p7b").all {
             directory.resolve("offline-mfi/$it").let { file -> file.isFile && file.length() > 0 }
         }) { "Standalone CarPlay authentication files are missing or empty" }
+        // The whole directory is merged into the APK as assets, so anything else placed here
+        // would ship: keep it limited to the two identity files.
+        val unexpected = directory.walkTopDown().filter { it.isFile }
+            .map { it.relativeTo(directory).invariantSeparatorsPath }
+            .filter { it != "offline-mfi/identity.pk8" && it != "offline-mfi/certificate.p7b" }
+            .toList()
+        check(unexpected.isEmpty()) {
+            "DIPLAY_AUTH_ASSETS_DIR must contain only offline-mfi/identity.pk8 and " +
+                "offline-mfi/certificate.p7b, found: ${unexpected.joinToString()}"
+        }
     }
 }
 tasks.named("preBuild") { mustRunAfter(verifyStandaloneAuthentication) }
