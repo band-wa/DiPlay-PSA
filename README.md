@@ -1,8 +1,8 @@
 # DiPlay
 
-**CarPlay for compatible BYD Android head units.** Wired and wireless, with the familiar DiAuto interface. Independent app: `com.shihab.diplay`.
+**CarPlay for Peugeot and Citroën (PSA) Android 9 head units.** Wired and wireless. Independent app: `com.shihab.diplay`.
 
-> **BYD support scope:** These projects focus on BYD cars. They may work on other brands, but other brands are unsupported and there are no plans to add support or fix brand-specific incompatibilities.
+> **Fork scope:** This fork of [DiPlay](https://github.com/shihabal3amri/DiPlay) targets PSA (Peugeot/Citroën) head units running Android 9. The CarPlay protocol, audio, video and touch paths stay upstream; the BYD/DiLink integrations (instrument cluster, windscreen HUD, dashboard map mirror, vehicle data, network ADB) are removed ([BYD_REMOVAL_AUDIT.md](docs/BYD_REMOVAL_AUDIT.md)), and upstream is taken only as necessary patches ([FORK_POLICY.md](docs/FORK_POLICY.md)). Other brands are unsupported.
 
 [Download & website](https://shihabal3amri.github.io/DiPlay/) · [Release](https://github.com/shihabal3amri/DiPlay/releases/tag/v0.2.10) · [Report a problem](https://github.com/shihabal3amri/DiPlay/issues/new/choose)
 
@@ -45,6 +45,7 @@ If a problem remains, use **Settings → Diagnostics → Save diagnostic report*
 - [Privacy and diagnostic reports](docs/PRIVACY.md)
 - [Build from source](docs/BUILD.md)
 - [Validation](docs/VALIDATION.md)
+- [Fork policy](docs/FORK_POLICY.md)
 - [Release notes](CHANGELOG.md)
 - [Credits and licenses](docs/THIRD_PARTY_NOTICES.md)
 
@@ -52,7 +53,7 @@ The website is available in English, Arabic, Russian, Ukrainian, Spanish and Sim
 
 ## Source and credits
 
-Based on [xcertplay](https://github.com/shilapi/xcertplay), GPL-3.0. The home/settings UI and website adapt [DiAuto](https://github.com/shihabal3amri/DiAuto), AGPL-3.0; that license is included in `docs/licenses`. Preserve those notices when distributing modifications. CarPlay and its icon belong to Apple Inc.; no Apple or BYD affiliation or endorsement is implied.
+Based on [xcertplay](https://github.com/shilapi/xcertplay), GPL-3.0. The home/settings UI and website adapt [DiAuto](https://github.com/shihabal3amri/DiAuto), AGPL-3.0; that license is included in `docs/licenses`. Preserve those notices when distributing modifications. CarPlay and its icon belong to Apple Inc.; no Apple, BYD or Stellantis/PSA affiliation or endorsement is implied.
 
 This repository starts with a clean public source snapshot. Local research, tester reports and release-signing secrets are excluded. The complete source corresponding to the APK is provided with every release; experimental runtime identity assets are described separately in the build instructions and notices.
 

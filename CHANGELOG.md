@@ -19,6 +19,7 @@ Fork of [DiPlay](https://github.com/shihabal3amri/DiPlay) aimed at Peugeot/Citro
 - Match Apple devices in the USB attach filter so a connected iPhone is offered to DiPlay.
 - Keep the current album art between tracks and show a neutral placeholder instead of a stale cover.
 - Fix Simplified Chinese wording and spacing, including the hotspot description that asked users to use the head unit's own hotspot.
+- Freeze this fork as the baseline for future work: upstream is watched read-only, and only necessary patches (confirmed defects, measured performance, protocol compatibility, small self-contained fixes) are cherry-picked. See [docs/FORK_POLICY.md](docs/FORK_POLICY.md).
 
 # DiPlay 0.2.10 — 2026-10-03
 
