@@ -10,7 +10,7 @@ This public preview is an independent receiver, not an Apple-certified CarPlay a
 | Other cars | Mixed community reports across DiLink generations; not a certified model support list |
 | Current release | Car hotspot confirmed; Wi-Fi Direct improved, occasional audio cutouts remain (DiLink5.1 tests) |
 | Wi-Fi | Prefer 5 GHz without an established station connection; align to a supported existing station channel; explicit 2.4 GHz fallback for firmware that rejects 5 GHz or automatic channel selection |
-| Video | Default H.264 / 30 fps; 60 fps and HEVC increase device-specific demands |
+| Video | Default H.264 / 50 fps; 60 fps and HEVC increase device-specific demands |
 
 ## Car hotspot
 

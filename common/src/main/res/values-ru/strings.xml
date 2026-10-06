@@ -290,6 +290,7 @@
     <string name="s_2_pair_your_iphone">2 · Свяжите iPhone</string>
     <string name="s_300_ms_default">300 мс · по умолчанию</string>
     <string name="s_30_fps_lighter_load">30 кадров/с · меньшая нагрузка</string>
+    <string name="s_50_fps_balanced">50 кадров/с · сбалансированный</string>
     <string name="s_3_connect">3 · Подключитесь</string>
 
     <string name="s_500_ms">500 мс</string>

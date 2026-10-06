@@ -8,6 +8,7 @@ Fork of [DiPlay](https://github.com/shihabal3amri/DiPlay) aimed at Peugeot/Citro
 - Enable R8 code and resource shrinking for the mobile release build, keeping original class and enum names (`-dontobfuscate`) so in-app diagnostics and exported reports stay readable on a head unit.
 - Open the settings menu from inside a running session with the configured swipe gesture, including system bar visibility, and restore safe-area edits made in the menu when it is cancelled.
 - Adjust the CarPlay picture while it is on screen: brightness, contrast, saturation and warmth are applied as a colour matrix on the video texture, with an original/comparison switch and a reset. Nothing is renegotiated, restarted or applied to the head-unit user interface.
+- Default the video frame rate to 50 fps: a fresh install without a saved value now starts at 50 fps instead of 30, and the connection settings offer 30/50/60 instead of only 30/60. The in-session frame-rate slider already allowed 50.
 - Fit the CarPlay preparation screen into short landscape displays and respect system bar and cutout insets, so the title, instructions and buttons stay fully visible on head-unit screens.
 - Support multi-window and split-screen layouts with compact cards, instant GPU matrix scaling, preserved video geometry, and an optional multi-window resolution adaptation toggle that stays off by default.
 - Export diagnostics without a head-unit file picker: reports are saved inside the app and can be viewed or copied there.
