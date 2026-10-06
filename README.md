@@ -1,62 +1,66 @@
-# DiPlay
+# DiPlay-PSA
 
-**CarPlay for Peugeot and Citroën (PSA) Android 9 head units.** Wired and wireless. Independent app: `com.shihab.diplay`.
+**CarPlay for Peugeot and Citroën (PSA) Android 9 head units.** Wired USB, car hotspot and Wi-Fi Direct — including 5 GHz Wi-Fi Direct on Android 9. Independent app: `com.shihab.diplay`.
 
-> **Fork scope:** This fork of [DiPlay](https://github.com/shihabal3amri/DiPlay) targets PSA (Peugeot/Citroën) head units running Android 9. The CarPlay protocol, audio, video and touch paths stay upstream; the BYD/DiLink integrations (instrument cluster, windscreen HUD, dashboard map mirror, vehicle data, network ADB) are removed ([BYD_REMOVAL_AUDIT.md](docs/BYD_REMOVAL_AUDIT.md)), and upstream is taken only as necessary patches ([FORK_POLICY.md](docs/FORK_POLICY.md)). Other brands are unsupported.
-
-[Download & website](https://shihabal3amri.github.io/DiPlay/) · [Release](https://github.com/shihabal3amri/DiPlay/releases/tag/v0.2.10) · [Report a problem](https://github.com/shihabal3amri/DiPlay/issues/new/choose)
+DiPlay-PSA is a fork of [DiPlay](https://github.com/shihabal3amri/DiPlay): the CarPlay protocol, audio, video and touch paths are kept upstream, while the vendor-specific head-unit integrations and the Android 9 wireless limitations are what this fork reworks.
 
 ![DiPlay home](site/assets/home.png)
 
-## 0.2.10 — public preview
+## Base
 
-Install on the **car**, not the iPhone. No jailbreak, dongle, Mac, account or authentication server is required for use. Core CarPlay does not require ADB; optional dashboard, battery, wheel-speed and parked-video features do. Your head unit must permit APK installation. Wireless supports Wi-Fi Direct or the car’s existing hotspot; Wi-Fi Direct requires Android 10+; the APK supports Android 9+ for wired use.
+- Built on [DiPlay 0.2.10](https://github.com/shihabal3amri/DiPlay/releases/tag/v0.2.10) (2026-10-03), the release this fork diverged from, including the generic wireless, media, settings and diagnostic fixes it carried.
+- Fork version `0.2.11-psa.x`; the current build is **0.2.11-psa.2**.
+- Upstream is followed read-only: only small, confirmed patches are cherry-picked ([FORK_POLICY.md](docs/FORK_POLICY.md)). The IPv4 accessory address and the Android 9 Wi-Fi Direct channel support below started in this fork and were merged upstream (PRs #282, #283); their later hardening is imported back.
 
-- Wired USB and wireless CarPlay with local authentication.
-- Car hotspot support, improved audio buffering and saved receive diagnostics.
-- Automatic address discovery, fixed-channel Wi-Fi fallbacks and successful-configuration memory.
-- Icon/text size, resolution and frame rate; applying a display change reconnects CarPlay.
-- Local diagnostic export. Reports are sent only if you choose to share them.
-- Separate installation alongside DiAuto. Run one projection app at a time.
+## What this fork changes
 
-This is **not an Apple-certified product**. The APK bundles an experimental accessory identity recovered from public Carlinkit firmware, not a newly provisioned MFi identity for DiPlay. A bundled private key is extractable. Acceptance after future iOS updates, reliability across head units and suitability of that identity for general distribution are unresolved. This release invites community testing; it is not a guarantee of universal compatibility.
+### PSA adaptation
 
-Earlier releases were tested on the development DiLink5.1 car: live windshield guidance and street names work, Car hotspot now starts CarPlay, and Wi-Fi Direct performance is substantially improved. Occasional audio cutouts remain and are deferred to a later update. The floating-map test build was installed on the development DiLink 5.1 car; feedback led to the pinch corrections in 0.2.9. Earlier wheel-speed and video contributions were tested on a BYD Tang with DiLink 5.0 and an iPhone 15 Pro on iOS 27; wheel-speed dead reckoning in tunnels remains unverified. Broader head-unit and iOS compatibility is not guaranteed. The BYD instrument-cluster, HUD and dashboard-map features are removed in this fork; see [BYD_REMOVAL_AUDIT.md](docs/BYD_REMOVAL_AUDIT.md).
+- Removes the BYD/DiLink head-unit integrations — instrument cluster, windscreen HUD, launcher map card, vehicle data and network ADB — together with their settings, resources and tests. The default OEM label is PSA; CarPlay audio, video, touch and the wireless connection paths are unaffected ([BYD_REMOVAL_AUDIT.md](docs/BYD_REMOVAL_AUDIT.md)).
+- Offers local offline authentication only; the CH341 bridge, I2C and remote authentication sources are not part of this fork.
+- Documents the development head unit's Wi-Fi Direct firmware defect: its vendor `WifiP2pServiceImpl`, a HiCar adaptation, crashes the framework when a phone joins the group without P2P discovery, so on that unit the car hotspot or USB are the options ([COMPATIBILITY.md](docs/COMPATIBILITY.md)).
 
-## What’s new in 0.2.10
+### Android 9 wireless
 
-- CarPlay song metadata, playback position and album artwork for compatible Android launchers and media displays.
-- Available-port selection when another service occupies AirPlay port 7000, with the selected port advertised to the iPhone.
-- Targeted USBMUX padding handling that preserves complete following frames, and USB startup without completed wireless-hotspot settings.
-- Wi-Fi Direct compatibility for unknown reported security types, bounded busy-channel retries and 5 GHz to 2.4 GHz fallback.
-- Available Android echo cancellation and noise suppression during CarPlay calls, with previous audio mode restored afterward.
-- BYD CAN/CANFD battery-protocol detection and a saved show/hide setting for the home-screen dashboard-map mirror.
-- Optional video while in P uses a new player with seeking and ten-second skip controls. URL validation and redirects protect local Android resources; protected video remains unsupported.
-- More Ukrainian translations and bounded Bluetooth, USB restart, boot and microphone diagnostics in exported reports.
+- **Wi-Fi Direct on Android 9**: when the user selects a channel, the group's operating channel is pinned through the hidden Wi-Fi P2P channel request before the group is created, and reported as unverified because Android 9 cannot read the frequency back. Verified end to end on Android 9: an iPhone joining a 5 GHz group on channel 149 completes a full CarPlay session ([ANDROID9_WIFI_DIRECT.md](docs/ANDROID9_WIFI_DIRECT.md)).
+- **IPv4 accessory address**: the address sent to the iPhone over iAP2 and Bonjour is the interface's IPv4 address whenever it has one — for Wi-Fi Direct and LocalOnlyHotspot groups the app owns, and for a car hotspot the head unit owns. Some Android 9 firmwares route the link-local IPv6 address of such interfaces into a policy table no rule selects, where an IPv6-only endpoint never opens the AirPlay connection.
 
-Optional video requires network ADB and a valid parked-gear reading. Battery, dashboard and call effects depend on firmware and Android support. See [0.2.10 release notes](docs/RELEASE-NOTES-0.2.10.md) for all ten contributions, regression fixes and validation limits. Existing device-specific wireless loss, microphone and reconnect reports still need hardware testing.
+### CarPlay experience
 
-If a problem remains, use **Settings → Diagnostics → Save diagnostic report**. Android 10+ saves to **Downloads/DiPlay**; Android 9 uses the document picker. If the picker or Downloads storage is unavailable, the report saves to **Android/data/com.shihab.diplay/files/diagnostic-reports/** and the confirmation shows the full `.txt` path. If that storage is also unavailable, the report saves privately in DiPlay. You can view or share either fallback report from the confirmation. Review the `.txt` file and attach it to your [issue](https://github.com/shihabal3amri/DiPlay/issues), including Android version, phone/iOS, connection mode, steps and failure time. Reports are shared only when you choose; never post your hotspot password.
+- In-session settings menu opened with the configured swipe gesture, with system bar controls and safe-area edits preserved when the menu is cancelled.
+- Live picture adjustments (brightness, contrast, saturation, warmth) applied as a colour matrix on the video texture, with an original/comparison switch and a reset.
+- Multi-window and split-screen layouts with compact cards, instant GPU matrix scaling, preserved video geometry and an optional resolution adaptation toggle.
+- Album art kept between tracks, with a neutral placeholder instead of a stale cover.
+- CarPlay preparation screen fitted to short landscape displays, respecting system bars and cutouts.
+- Wireless startup recovery: a half-raised car hotspot interface is awaited until it is usable, and a session where the iPhone never opens the AirPlay control connection is retried with backoff and a manual retry button.
+- USB attach filter matches Apple devices, and an Accessibility service confirms DiPlay's own Android USB permission dialog.
+- Diagnostics export without a head-unit file picker: reports are saved in the app or under Android/data and can be shared from there.
+- R8 code and resource shrinking for a small release APK, keeping original class and enum names so exported reports stay readable.
+
+## Requirements
+
+- Head unit: Android 9 or newer, with permission to install APKs.
+- Phone: standard, non-jailbroken iPhone with CarPlay enabled.
+- Connection: wired USB, the car's own hotspot, or Wi-Fi Direct. No jailbreak, dongle, Mac, account or authentication server.
+
+This is **not an Apple-certified product**. The APK bundles an experimental accessory identity recovered from public Carlinkit firmware, which is extractable; acceptance after future iOS updates is not guaranteed. See [COMPATIBILITY.md](docs/COMPATIBILITY.md) for scope and troubleshooting.
+
+## Install and build
+
+- [Install and connect](docs/INSTALL.md) — install on the car, not the iPhone.
+- [Build from source](docs/BUILD.md) — JDK 17+, Android SDK Platform 37, NDK 28.2.13676358; release builds need `DIPLAY_AUTH_ASSETS_DIR` and a signing key.
 
 ## Documentation
 
-- [Install and connect](docs/INSTALL.md)
 - [Compatibility and troubleshooting](docs/COMPATIBILITY.md)
+- [Android 9 Wi-Fi Direct](docs/ANDROID9_WIFI_DIRECT.md)
+- [Wireless diagnostics](docs/WIRELESS_DIAGNOSTICS.md)
+- [Connection setup](docs/CONNECTION_SETUP.md)
 - [Privacy and diagnostic reports](docs/PRIVACY.md)
-- [Build from source](docs/BUILD.md)
 - [Validation](docs/VALIDATION.md)
 - [Fork policy](docs/FORK_POLICY.md)
-- [Release notes](CHANGELOG.md)
-- [Credits and licenses](docs/THIRD_PARTY_NOTICES.md)
-
-The website is available in English, Arabic, Russian, Ukrainian, Spanish and Simplified Chinese. The app interface supports those same six languages. Choose the app language in Settings; on Android 13+, it stays synchronized with Android’s per-app language setting.
+- [Upstream README](docs/UPSTREAM-README.md) · [Changelog](CHANGELOG.md) · [Credits and licenses](docs/THIRD_PARTY_NOTICES.md)
 
 ## Source and credits
 
-Based on [xcertplay](https://github.com/shilapi/xcertplay), GPL-3.0. The home/settings UI and website adapt [DiAuto](https://github.com/shihabal3amri/DiAuto), AGPL-3.0; that license is included in `docs/licenses`. Preserve those notices when distributing modifications. CarPlay and its icon belong to Apple Inc.; no Apple, BYD or Stellantis/PSA affiliation or endorsement is implied.
-
-This repository starts with a clean public source snapshot. Local research, tester reports and release-signing secrets are excluded. The complete source corresponding to the APK is provided with every release; experimental runtime identity assets are described separately in the build instructions and notices.
-
-## Local release packaging
-
-The release APK intentionally contains the experimental accessory identity. The Git repository and source archive exclude all accessory and Android signing keys; tests generate synthetic identities at runtime. Source/CI builds omit runtime identity assets by default. Local release builds explicitly select an external asset directory. Publishing the APK makes its bundled identity extractable; building locally does not preserve that identity's confidentiality.
+Based on [xcertplay](https://github.com/shilapi/xcertplay) and [DiPlay](https://github.com/shihabal3amri/DiPlay), GPL-3.0. The home/settings UI and website adapt [DiAuto](https://github.com/shihabal3amri/DiAuto), AGPL-3.0; that license is included in `docs/licenses`. Preserve those notices when distributing modifications. CarPlay and its icon belong to Apple Inc.; no Apple or Stellantis/PSA affiliation or endorsement is implied.
