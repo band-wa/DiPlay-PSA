@@ -52,6 +52,8 @@ The vendor build keeps those lines and then writes the station's interface addre
 136074: iput-object v5, v2, Landroid/net/wifi/p2p/WifiP2pDevice;.interfaceAddress:Ljava/lang/String;
 ```
 
+The write has a purpose. The same firmware's `SoftApManager` broadcasts `android.net.wifi.WIFI_AP_STA_JOIN` and `WIFI_AP_STA_LEAVE` carrying the station MAC (`sendBroadcast ApLinkedStaChanged.` in its log), the head-unit adaptation Huawei's HiCar integration guide requires so the upper layer learns when a device joins the car's network. HiCar's wireless path runs the phone over Wi-Fi P2P with the head unit as group owner, and the guide's official example covers only the SoftApManager side, an ordinary AP. The vendor implemented the same notification for P2P groups by writing the station's interface address into the peer entry, which the framework's peers broadcast then exposes to the upper layer. A HiCar phone always completes P2P discovery before joining and therefore has a peer entry, so the defect stays invisible there; it only fires for stations that associate without P2P discovery.
+
 An iPhone joins as a legacy client: it receives the hotspot name and passphrase over iAP2 and associates as an ordinary WPA2 station, so it is never in that peer list and the write fails on the first connection. Any other station would do the same. DiPlay cannot work around it, because the peer list has no public write path, so on such a unit the car hotspot or USB are the only options.
 
 ## Known limitations
