@@ -47,6 +47,10 @@ import com.shilapi.xcertplay.adb.LocalAdb
 import com.shilapi.xcertplay.airplay.CarPlayClusterDisplay
 import com.shilapi.xcertplay.airplay.CarPlayDisplayScale
 import com.shilapi.xcertplay.airplay.ClusterTurnCardOverlay
+import com.shilapi.xcertplay.backup.SettingsBackupCodec
+import com.shilapi.xcertplay.backup.SettingsBackupEndpoint
+import com.shilapi.xcertplay.backup.SettingsBackupServer
+import com.shilapi.xcertplay.backup.SettingsQrCode
 import com.shilapi.xcertplay.compat.closeCompat
 import com.shilapi.xcertplay.hud.BydAdbAccess
 import com.shilapi.xcertplay.hud.BydNavigationOutputs
@@ -217,6 +221,9 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
     private var availableUpdate: UpdateRelease? = null
     private var updateSavedPath: String? = null
     @Volatile private var updateStage = UpdateStage.IDLE
+    @Volatile private var backupServer: SettingsBackupServer? = null
+    @Volatile private var backupEndpoint: SettingsBackupEndpoint? = null
+    @Volatile private var backupSummary: String? = null
     @Volatile private var updateGeneration = 0
     @Volatile private var updateProgress: Int? = null
     private var updateRelease: UpdateRelease? = null
@@ -518,6 +525,7 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
         hotspotJoinControls?.close()
         cancelUsbPermissionSetup()
         cancelKeyLearning()
+        stopBackupServer()
         handler.removeCallbacks(automaticVehicleValidation)
         adbCheckGeneration++
         synchronized(vehicleOperationLock) {
@@ -662,6 +670,7 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
                 "setup" -> setupGuide(content)
                 "settings" -> settingsCategoryContent(content)
                 "about" -> about(content)
+                "backup" -> backup(content)
                 else -> home(content)
             }
             scroll
@@ -757,6 +766,10 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
         }
         val returnCategory = connectionSettingsReturnCategory
         when {
+            page == "backup" -> {
+                stopBackupServer()
+                page = "about"
+            }
             page == "about" -> {
                 page = "settings"
                 settingsCategory = SettingsCategory.OVERVIEW
@@ -2186,12 +2199,95 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
                 getString(R.string.settings_background_update_checks_description),
                 UpdateAvailability.backgroundChecksEnabled(this)) { UpdateAvailability.saveBackgroundChecksEnabled(this, it) }
         }
+        section(content, getString(R.string.backup_title)) { card ->
+            card.addView(button(getString(R.string.backup_open), false) { openBackup() }, matchButton(0, 60))
+            card.addView(label(getString(R.string.backup_open_description), 14, MUTED).apply { setPadding(0, dp(10), 0, 0) })
+        }
         section(content, getString(R.string.made_possible_by_open_source)) { card ->
             card.addView(label(getString(R.string.receiver_based_on_xcertplay_licensed_under_gpl_3_0_diplay), 16, MUTED))
         }
     }
 
     private enum class UpdateStage { IDLE, CHECKING, AVAILABLE, DOWNLOADING, VERIFYING, READY, FAILED }
+
+    private fun openBackup() {
+        page = "backup"
+        render()
+    }
+
+    private fun backup(content: LinearLayout) {
+        val preferredPrefix = when (AirPlayPersistence.loadWirelessHotspotMode(this)) {
+            WirelessHotspotMode.WIFI_P2P -> "p2p"
+            WirelessHotspotMode.LOCAL_ONLY_HOTSPOT -> "ap"
+            WirelessHotspotMode.MANUAL, WirelessHotspotMode.EXISTING_WIFI -> "wlan"
+        }
+        val addresses = SettingsBackupServer.addressCandidates(preferredPrefix)
+        content.addView(label(getString(R.string.backup_title), 40, TEXT, true))
+        var endpoint = backupEndpoint
+        if ((backupServer == null || endpoint == null) && addresses.isEmpty()) {
+            content.addView(space(SETTINGS_BLOCK_GAP_DP))
+            content.addView(label(getString(R.string.backup_no_network), 16, MUTED))
+            return
+        }
+        if (backupServer == null || endpoint == null) {
+            val created = SettingsBackupServer(
+                page = backupPageHtml(),
+                export = { SettingsBackupCodec.export(this, version()) },
+                import = { SettingsBackupCodec.import(this, it) },
+            )
+            created.onImported = { outcome ->
+                runOnUiThread {
+                    if (isFinishing || isDestroyed) return@runOnUiThread
+                    backupSummary = if (outcome.invalid) getString(R.string.backup_import_invalid)
+                    else getString(R.string.backup_summary, outcome.applied, outcome.skipped)
+                    if (!outcome.invalid && outcome.applied > 0) markReconnectNeeded()
+                    render()
+                }
+            }
+            endpoint = created.start()
+            if (endpoint == null) {
+                created.stop()
+                content.addView(space(SETTINGS_BLOCK_GAP_DP))
+                content.addView(label(getString(R.string.backup_no_network), 16, MUTED))
+                return
+            }
+            backupServer = created
+            backupEndpoint = endpoint
+            backupSummary = null
+        }
+        val active = endpoint
+        val qr = ImageView(this).apply {
+            val side = dp(240)
+            setImageBitmap(SettingsQrCode.encode(active.url(addresses.first()), side))
+            scaleType = ImageView.ScaleType.FIT_CENTER
+        }
+        content.addView(space(SETTINGS_BLOCK_GAP_DP))
+        content.addView(card().apply {
+            addView(label(getString(R.string.backup_page_hint), 16, MUTED))
+            addView(qr, LinearLayout.LayoutParams(dp(240) + dp(24), dp(240) + dp(24)).apply {
+                topMargin = dp(SETTINGS_BLOCK_GAP_DP); gravity = Gravity.CENTER_HORIZONTAL
+            })
+            backupSummary?.let {
+                addView(label(it, 15, TEXT).apply { setPadding(0, dp(16), 0, 0) })
+            }
+            if (addresses.size > 1) {
+                addView(label(
+                    addresses.drop(1).joinToString("\n") { getString(R.string.backup_other_addresses, it) },
+                    14,
+                    MUTED,
+                ).apply { setPadding(0, dp(16), 0, 0) })
+            }
+        })
+    }
+
+    private fun stopBackupServer() {
+        backupServer?.stop()
+        backupServer = null
+        backupEndpoint = null
+        backupSummary = null
+    }
+
+    private fun backupPageHtml(): ByteArray = assets.open("settings-backup.html").use { it.readBytes() }
 
     private fun updateRow(): View {
         val container = column().apply { setPadding(0, dp(12), 0, 0) }

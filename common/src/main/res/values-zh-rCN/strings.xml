@@ -775,6 +775,14 @@
     <string name="update_failed">更新失败</string>
     <string name="update_available_home">有可用更新</string>
     <string name="update_saved_to">已保存到 %1$s</string>
+    <string name="backup_title">备份设置</string>
+    <string name="backup_open">在手机上备份或恢复</string>
+    <string name="backup_open_description">显示二维码，同一网络内的手机浏览器即可导出或导入 DiPlay 设置。离开页面后服务自动停止。</string>
+    <string name="backup_page_hint">用手机相机扫码，在浏览器中打开此页面。导出保存设置文件，导入载入设置文件。</string>
+    <string name="backup_other_addresses">若扫码无法打开，请尝试将浏览器中的 IP 地址改为 %1$s。</string>
+    <string name="backup_no_network">没有可用的 Wi-Fi 网络。请先开启车载热点，或让手机连接车机 Wi-Fi。</string>
+    <string name="backup_summary">已导入 %1$d 项设置，跳过 %2$d 项。</string>
+    <string name="backup_import_invalid">这不是 DiPlay 设置备份文件。</string>
     <string name="settings_background_update_checks">在后台检查更新</string>
     <string name="settings_background_update_checks_description">DiPlay 每天会在 GitHub 上检查一次新版本，并显示在主屏幕上。未经你点击，绝不会下载。</string>
     <string name="setup_guide">设置向导</string>

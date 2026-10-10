@@ -680,6 +680,14 @@
     <string name="update_failed">Error de actualización</string>
     <string name="update_available_home">Actualización disponible</string>
     <string name="update_saved_to">Guardado en %1$s</string>
+    <string name="backup_title">Copia de seguridad de ajustes</string>
+    <string name="backup_open">Copiar o restaurar en un teléfono</string>
+    <string name="backup_open_description">Muestra un código QR para exportar o importar los ajustes de DiPlay desde el navegador de un teléfono en la misma red. El servicio se detiene al salir de la página.</string>
+    <string name="backup_page_hint">Escanea el código con la cámara del teléfono para abrir esta página en su navegador. Exportar guarda un archivo de ajustes; importar carga uno.</string>
+    <string name="backup_other_addresses">Si el código no funciona, prueba a cambiar la dirección IP del navegador por %1$s.</string>
+    <string name="backup_no_network">No hay red Wi-Fi disponible. Activa el hotspot del coche o conecta el teléfono al Wi-Fi del coche primero.</string>
+    <string name="backup_summary">Se importaron %1$d ajustes, se omitieron %2$d.</string>
+    <string name="backup_import_invalid">Este archivo no es una copia de seguridad de ajustes de DiPlay.</string>
     <string name="settings_background_update_checks">Buscar actualizaciones en segundo plano</string>
     <string name="settings_background_update_checks_description">Una vez al día, DiPlay busca una versión nueva en GitHub y la muestra en la pantalla de inicio. Nunca descarga sin que lo toques.</string>
     <string name="setup_guide">Guía de configuración</string>

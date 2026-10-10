@@ -680,6 +680,14 @@
     <string name="update_failed">فشل التحديث</string>
     <string name="update_available_home">يتوفر تحديث</string>
     <string name="update_saved_to">تم الحفظ في %1$s</string>
+    <string name="backup_title">نسخة احتياطية من الإعدادات</string>
+    <string name="backup_open">نسخ احتياطي أو استعادة عبر هاتف</string>
+    <string name="backup_open_description">يعرض رمز QR ليتمكن متصفح الهاتف في نفس الشبكة من تصدير إعدادات DiPlay أو استيرادها. تتوقف الخدمة عند مغادرة الصفحة.</string>
+    <string name="backup_page_hint">امسح الرمز بكاميرا الهاتف لفتح هذه الصفحة في متصفحه. التصدير يحفظ ملف الإعدادات، والاستيراد يحمّله.</string>
+    <string name="backup_other_addresses">إذا لم يفتح الرمز، جرّب تغيير عنوان IP في المتصفح إلى %1$s.</string>
+    <string name="backup_no_network">لا توجد شبكة Wi-Fi متاحة. شغّل نقطة اتصال السيارة أو وصّل الهاتف بشبكة السيارة أولاً.</string>
+    <string name="backup_summary">تم استيراد %1$d من الإعدادات، وتجاهل %2$d.</string>
+    <string name="backup_import_invalid">هذا الملف ليس نسخة احتياطية لإعدادات DiPlay.</string>
     <string name="settings_background_update_checks">التحقق من التحديثات في الخلفية</string>
     <string name="settings_background_update_checks_description">مرة كل يوم، يتحقق DiPlay من GitHub عن إصدار جديد ويعرضه في الشاشة الرئيسية. لا يتم التنزيل أبدًا دون نقرتك.</string>
     <string name="setup_guide">دليل الإعداد</string>

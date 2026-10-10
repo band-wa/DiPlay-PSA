@@ -680,6 +680,14 @@
     <string name="update_failed">Не удалось обновить</string>
     <string name="update_available_home">Доступно обновление</string>
     <string name="update_saved_to">Сохранено в %1$s</string>
+    <string name="backup_title">Резервная копия настроек</string>
+    <string name="backup_open">Резервная копия на телефоне</string>
+    <string name="backup_open_description">Показывает QR-код, чтобы браузер телефона в той же сети мог экспортировать или импортировать настройки DiPlay. Сервис останавливается при выходе со страницы.</string>
+    <string name="backup_page_hint">Отсканируйте код камерой телефона, чтобы открыть страницу в его браузере. Экспорт сохраняет файл настроек, импорт загружает его.</string>
+    <string name="backup_other_addresses">Если код не открывается, попробуйте изменить IP-адрес в браузере на %1$s.</string>
+    <string name="backup_no_network">Нет доступной сети Wi-Fi. Сначала включите точку доступа автомобиля или подключите телефон к Wi-Fi автомобиля.</string>
+    <string name="backup_summary">Импортировано настроек: %1$d, пропущено: %2$d.</string>
+    <string name="backup_import_invalid">Этот файл не является резервной копией настроек DiPlay.</string>
     <string name="settings_background_update_checks">Проверять обновления в фоне</string>
     <string name="settings_background_update_checks_description">Раз в сутки DiPlay проверяет GitHub на новую версию и показывает её на главном экране. Загрузка начинается только после вашего нажатия.</string>
     <string name="setup_guide">Мастер настройки</string>
